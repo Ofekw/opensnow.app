@@ -199,6 +199,12 @@ export function ResortPage() {
               })}
             </div>
 
+            {/* 7-day overview chart */}
+            <div className="resort-page__chart-block">
+              <h3 className="section-subtitle">7-Day Overview</h3>
+              <DailyForecastChart daily={bandData.daily} />
+            </div>
+
             {/* Hourly snow breakdown for selected day */}
             {selectedDayHourly.length > 0 && (
               <HourlySnowChart
@@ -206,12 +212,6 @@ export function ResortPage() {
                 dayLabel={selectedDayLabel}
               />
             )}
-
-            {/* 7-day overview chart */}
-            <div className="resort-page__chart-block">
-              <h3 className="section-subtitle">7-Day Overview</h3>
-              <DailyForecastChart daily={bandData.daily} />
-            </div>
           </section>
 
           {/* ─── CONDITIONS SECTION ─── */}
