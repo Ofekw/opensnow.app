@@ -98,11 +98,30 @@
   opacity: 0.5;
 }
 
-/* Daily summary strip */
-.resort-page__daily-summary {
-  margin-top: var(--space-lg);
+/* ── Snowfall Section ───────────────────────────── */
+.resort-page__snow-section {
+  margin-top: var(--space-xl);
 }
 
+.resort-page__snow-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.resort-page__week-total {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: rgba(56, 189, 248, 0.1);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* Interactive day cards */
 .daily-cards {
   display: flex;
   gap: var(--space-sm);
@@ -120,8 +139,20 @@
   padding: var(--space-sm);
   background: var(--color-surface);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-surface-alt);
+  border: 2px solid transparent;
   font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  user-select: none;
+}
+.day-card:hover {
+  background: var(--color-surface-alt);
+  transform: translateY(-1px);
+}
+.day-card--selected {
+  border-color: var(--color-accent);
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
 }
 
 .day-card__date {
@@ -141,6 +172,11 @@
   min-height: 1em;
 }
 
+/* Chart block inside snow section */
+.resort-page__chart-block {
+  margin-top: var(--space-lg);
+}
+
 /* Section */
 .resort-page__section {
   margin-top: var(--space-xl);
@@ -150,6 +186,24 @@
   font-size: 1.05rem;
   font-weight: 700;
   margin-bottom: var(--space-md);
+}
+
+.section-subtitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+/* Conditions 2-column grid */
+.resort-page__conditions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+.resort-page__section--half {
+  margin-top: 0;
 }
 
 .resort-page__error {
@@ -171,6 +225,13 @@
   font-size: 0.9rem;
 }
 
+@media (max-width: 768px) {
+  .resort-page__conditions-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+}
+
 @media (max-width: 640px) {
   .resort-page__name {
     font-size: 1.3rem;
@@ -178,82 +239,4 @@
   .resort-page__stats {
     gap: var(--space-sm);
   }
-}
-
-/* ── Recent Snow Table ───────────────────────────── */
-.recent-snow__total {
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-md);
-}
-.recent-snow__total strong {
-  color: var(--color-accent);
-  font-size: 1.1rem;
-}
-
-.recent-snow__bars {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.recent-snow__row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: 4px var(--space-sm);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  font-size: 0.82rem;
-}
-.recent-snow__row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.recent-snow__date {
-  width: 42px;
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.recent-snow__icon {
-  width: 22px;
-  flex-shrink: 0;
-  text-align: center;
-  font-size: 1rem;
-}
-
-.recent-snow__bar-track {
-  flex: 1;
-  height: 8px;
-  background: var(--color-surface-alt);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.recent-snow__bar-fill {
-  height: 100%;
-  background: var(--color-accent);
-  border-radius: 4px;
-  min-width: 0;
-  transition: width 0.3s ease;
-}
-
-.recent-snow__amount {
-  width: 42px;
-  flex-shrink: 0;
-  text-align: right;
-  font-weight: 600;
-  color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.recent-snow__temps {
-  width: 90px;
-  flex-shrink: 0;
-  text-align: right;
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
 }

@@ -7,6 +7,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { ElevationToggle } from '@/components/ElevationToggle';
 import { DailyForecastChart } from '@/components/charts/DailyForecastChart';
 import { HourlyDetailChart } from '@/components/charts/HourlyDetailChart';
+import { HourlySnowChart } from '@/components/charts/HourlySnowChart';
+import { RecentSnowChart } from '@/components/charts/RecentSnowChart';
 import { FreezingLevelChart } from '@/components/charts/FreezingLevelChart';
 import { UVIndexChart } from '@/components/charts/UVIndexChart';
 import { weatherDescription, fmtTemp, fmtElevation, fmtSnow } from '@/utils/weather';
@@ -23,6 +25,7 @@ export function ResortPage() {
   const { temp, elev, snow } = useUnits();
   const { tz, fmtDate } = useTimezone();
   const [band, setBand] = useState<ElevationBand>('mid');
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0);
 
   // Recent 14-day snowfall via forecast endpoint's past_days (no archive lag)
   const [recentDays, setRecentDays] = useState<DailyMetrics[]>([]);
@@ -35,7 +38,6 @@ export function ResortPage() {
     fetchForecast(resort.lat, resort.lon, resort.elevation.mid, 'mid', 1, 14, tz)
       .then((result) => {
         if (!cancelled) {
-          // past_days data comes first; exclude today and future
           const today = new Date().toISOString().slice(0, 10);
           setRecentDays(result.daily.filter((d) => d.date < today));
         }
@@ -44,6 +46,9 @@ export function ResortPage() {
       .finally(() => { if (!cancelled) setHistLoading(false); });
     return () => { cancelled = true; };
   }, [resort, tz]);
+
+  // Reset selected day when forecast changes
+  useEffect(() => { setSelectedDayIdx(0); }, [forecast, band]);
 
   if (!resort) {
     return (
@@ -55,6 +60,22 @@ export function ResortPage() {
   }
 
   const bandData: BandForecast | undefined = forecast?.[band];
+
+  // Compute hourly data for selected day
+  const selectedDay = bandData?.daily[selectedDayIdx];
+  const selectedDayHourly = useMemo(() => {
+    if (!bandData || !selectedDay) return [];
+    return bandData.hourly.filter((h) => h.time.startsWith(selectedDay.date));
+  }, [bandData, selectedDay]);
+
+  const selectedDayLabel = selectedDay
+    ? fmtDate(selectedDay.date + 'T12:00:00', { weekday: 'long', month: 'short', day: 'numeric' })
+    : '';
+
+  // Compute 7-day total snowfall
+  const weekTotalSnow = bandData
+    ? bandData.daily.reduce((s, d) => s + d.snowfallSum, 0)
+    : 0;
 
   return (
     <div className="resort-page">
@@ -136,14 +157,31 @@ export function ResortPage() {
 
       {bandData && (
         <>
-          {/* Daily summary row */}
-          <section className="resort-page__daily-summary">
-            <h2 className="section-title">7-Day Forecast — {band.toUpperCase()} ({fmtElevation(bandData.elevation, elev)})</h2>
+          {/* ─── SNOWFALL SECTION ─── */}
+          <section className="resort-page__snow-section">
+            <div className="resort-page__snow-section-header">
+              <h2 className="section-title">
+                ❄️ 7-Day Snow — {band.toUpperCase()} ({fmtElevation(bandData.elevation, elev)})
+              </h2>
+              {weekTotalSnow > 0 && (
+                <span className="resort-page__week-total">
+                  {fmtSnow(weekTotalSnow, snow)} next 7 days
+                </span>
+              )}
+            </div>
+
+            {/* Interactive day cards */}
             <div className="daily-cards">
-              {bandData.daily.map((d) => {
+              {bandData.daily.map((d, i) => {
                 const desc = weatherDescription(d.weatherCode);
+                const isSelected = i === selectedDayIdx;
                 return (
-                  <div key={d.date} className="day-card">
+                  <button
+                    key={d.date}
+                    className={`day-card ${isSelected ? 'day-card--selected' : ''}`}
+                    onClick={() => setSelectedDayIdx(i)}
+                    aria-pressed={isSelected}
+                  >
                     <span className="day-card__date">
                       {fmtDate(d.date + 'T12:00:00', { weekday: 'short' })}
                     </span>
@@ -156,84 +194,57 @@ export function ResortPage() {
                     <span className="day-card__snow">
                       {d.snowfallSum > 0 ? `❄️ ${fmtSnow(d.snowfallSum, snow)}` : '—'}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
+
+            {/* Hourly snow breakdown for selected day */}
+            {selectedDayHourly.length > 0 && (
+              <HourlySnowChart
+                hourly={selectedDayHourly}
+                dayLabel={selectedDayLabel}
+              />
+            )}
+
+            {/* 7-day overview chart */}
+            <div className="resort-page__chart-block">
+              <h3 className="section-subtitle">7-Day Overview</h3>
+              <DailyForecastChart daily={bandData.daily} />
+            </div>
           </section>
 
-          {/* Charts */}
+          {/* ─── CONDITIONS SECTION ─── */}
           <section className="resort-page__section">
-            <h2 className="section-title">Snow &amp; Rain / Temperature</h2>
-            <DailyForecastChart daily={bandData.daily} />
+            <h2 className="section-title">📊 Detailed Conditions — {selectedDayLabel}</h2>
+            <HourlyDetailChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
           </section>
 
-          <section className="resort-page__section">
-            <h2 className="section-title">Hourly Detail (next 7 days)</h2>
-            <HourlyDetailChart hourly={bandData.hourly.slice(0, 72)} />
-          </section>
+          <div className="resort-page__conditions-grid">
+            <section className="resort-page__section resort-page__section--half">
+              <h3 className="section-subtitle">UV Index</h3>
+              <UVIndexChart daily={bandData.daily} />
+            </section>
 
-          <section className="resort-page__section">
-            <h2 className="section-title">UV Index</h2>
-            <UVIndexChart daily={bandData.daily} />
-          </section>
-
-          <section className="resort-page__section">
-            <h2 className="section-title">Freezing Level</h2>
-            <FreezingLevelChart hourly={bandData.hourly.slice(0, 72)} />
-          </section>
+            <section className="resort-page__section resort-page__section--half">
+              <h3 className="section-subtitle">Freezing Level</h3>
+              <FreezingLevelChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
+            </section>
+          </div>
         </>
       )}
 
-      {/* Recent Snowfall */}
+      {/* ─── RECENT SNOWFALL ─── */}
       <section className="resort-page__section">
-        <h2 className="section-title">Recent Snowfall (past 14 days)</h2>
+        <h2 className="section-title">📅 Recent Snowfall (past 14 days)</h2>
         {histLoading ? (
           <div className="resort-page__loader">Loading history…</div>
         ) : recentDays.length > 0 ? (
-          <RecentSnowTable days={recentDays} />
+          <RecentSnowChart days={recentDays} />
         ) : (
           <p className="resort-page__muted">No recent data available.</p>
         )}
       </section>
-    </div>
-  );
-}
-
-function RecentSnowTable({ days }: { days: DailyMetrics[] }) {
-  const { temp, snow: snowUnit } = useUnits();
-  const totalSnow = days.reduce((s, d) => s + d.snowfallSum, 0);
-  return (
-    <div className="recent-snow">
-      <p className="recent-snow__total">
-        Total: <strong>{fmtSnow(totalSnow, snowUnit)}</strong> over {days.length} days
-      </p>
-      <div className="recent-snow__bars">
-        {days.map((d) => {
-          const desc = weatherDescription(d.weatherCode);
-          const snow = d.snowfallSum;
-          const maxSnow = Math.max(...days.map((x) => x.snowfallSum), 1);
-          const pct = (snow / maxSnow) * 100;
-          return (
-            <div key={d.date} className="recent-snow__row">
-              <span className="recent-snow__date">{d.date.slice(5)}</span>
-              <span className="recent-snow__icon" title={desc.label}>{desc.icon}</span>
-              <div className="recent-snow__bar-track">
-                <div
-                  className="recent-snow__bar-fill"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <span className="recent-snow__amount">
-                {snow > 0 ? fmtSnow(snow, snowUnit) : '—'}
-              </span>
-              <span className="recent-snow__temps">
-                {fmtTemp(d.temperatureMin, temp)} / {fmtTemp(d.temperatureMax, temp)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
