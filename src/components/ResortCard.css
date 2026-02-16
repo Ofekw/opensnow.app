@@ -1,0 +1,75 @@
+.resort-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.resort-card:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.resort-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.resort-card__name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.resort-card__name:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.resort-card__fav {
+  font-size: 1.3rem;
+  color: var(--color-text-muted);
+  transition: color 0.15s, transform 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.resort-card__fav:hover {
+  transform: scale(1.15);
+}
+.resort-card__fav.active {
+  color: var(--color-warning);
+}
+
+.resort-card__region {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.resort-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.resort-card__stats strong {
+  color: var(--color-text);
+  margin-right: 2px;
+}
+
+.resort-card__cta {
+  margin-top: auto;
+  padding-top: var(--space-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.resort-card__cta:hover {
+  color: var(--color-primary-hover);
+  text-decoration: none;
+}

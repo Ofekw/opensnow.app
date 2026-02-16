@@ -1,0 +1,23 @@
+.favorites__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: var(--space-lg);
+}
+
+.favorites__empty {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+  color: var(--color-text-muted);
+}
+.favorites__empty a {
+  display: inline-block;
+  margin-top: var(--space-md);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.favorites__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}

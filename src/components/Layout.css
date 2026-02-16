@@ -1,0 +1,77 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ── Header ────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-surface-alt);
+  backdrop-filter: blur(12px);
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.header__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.header__logo:hover {
+  text-decoration: none;
+  color: var(--color-accent);
+}
+
+.header__nav {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.nav-link {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+.nav-link:hover {
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  text-decoration: none;
+}
+.nav-link.active {
+  color: var(--color-accent);
+}
+
+/* ── Main ──────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-2xl);
+}
+
+/* ── Footer ────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--color-surface-alt);
+  padding: var(--space-md) 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.footer__inner a {
+  color: var(--color-accent);
+}
