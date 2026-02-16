@@ -40,12 +40,13 @@ export function DailyForecastChart({ daily }: Props) {
   return (
     <div style={{ width: '100%', height: 320 }}>
       <ResponsiveContainer>
-        <ComposedChart data={data} barCategoryGap="20%" barGap="-50%" margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} barCategoryGap="20%" barGap="-50%" margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis
             dataKey="date"
             tick={{ fill: '#94a3b8', fontSize: 12 }}
             axisLine={{ stroke: '#475569' }}
+            padding={{ left: -48, right: -48 }}
           />
           <YAxis
             yAxisId="precip"
