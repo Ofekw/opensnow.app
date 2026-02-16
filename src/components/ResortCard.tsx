@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Resort } from '@/types';
 import { fmtElevation } from '@/utils/weather';
 import './ResortCard.css';
@@ -10,12 +10,18 @@ interface Props {
 }
 
 export function ResortCard({ resort, isFavorite, onToggleFavorite }: Props) {
+  const navigate = useNavigate();
+
+  function handleCardClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('.resort-card__fav')) return;
+    navigate(`/resort/${resort.slug}`);
+  }
+
   return (
-    <div className="resort-card">
+    <div className="resort-card" onClick={handleCardClick} role="link" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/resort/${resort.slug}`); }}>
       <div className="resort-card__header">
-        <Link to={`/resort/${resort.slug}`} className="resort-card__name">
-          {resort.name}
-        </Link>
+        <span className="resort-card__name">{resort.name}</span>
         <button
           className={`resort-card__fav ${isFavorite ? 'active' : ''}`}
           onClick={onToggleFavorite}
@@ -44,9 +50,6 @@ export function ResortCard({ resort, isFavorite, onToggleFavorite }: Props) {
           </span>
         )}
       </div>
-      <Link to={`/resort/${resort.slug}`} className="resort-card__cta">
-        View Forecast →
-      </Link>
     </div>
   );
 }

@@ -7,6 +7,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
 }
 
 .resort-card:hover {
@@ -24,11 +25,6 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-text);
-  text-decoration: none;
-}
-.resort-card__name:hover {
-  color: var(--color-accent);
-  text-decoration: none;
 }
 
 .resort-card__fav {
@@ -62,14 +58,3 @@
   margin-right: 2px;
 }
 
-.resort-card__cta {
-  margin-top: auto;
-  padding-top: var(--space-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-.resort-card__cta:hover {
-  color: var(--color-primary-hover);
-  text-decoration: none;
-}

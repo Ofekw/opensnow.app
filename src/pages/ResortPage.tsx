@@ -1,17 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getResortBySlug } from '@/data/resorts';
-import { useForecast, useHistorical } from '@/hooks/useWeather';
+import { useForecast } from '@/hooks/useWeather';
+import { fetchForecast } from '@/data/openmeteo';
 import { useFavorites } from '@/hooks/useFavorites';
 import { ElevationToggle } from '@/components/ElevationToggle';
 import { DailyForecastChart } from '@/components/charts/DailyForecastChart';
 import { HourlyDetailChart } from '@/components/charts/HourlyDetailChart';
 import { FreezingLevelChart } from '@/components/charts/FreezingLevelChart';
 import { UVIndexChart } from '@/components/charts/UVIndexChart';
-import { SnowHistoryChart } from '@/components/charts/SnowHistoryChart';
 import { weatherDescription, fmtTemp, fmtElevation, fmtSnow } from '@/utils/weather';
-import { format, subYears } from 'date-fns';
-import type { ElevationBand, BandForecast } from '@/types';
+import { format } from 'date-fns';
+import type { ElevationBand, BandForecast, DailyMetrics } from '@/types';
 import './ResortPage.css';
 
 export function ResortPage() {
@@ -21,15 +21,26 @@ export function ResortPage() {
   const { toggle, isFav } = useFavorites();
   const [band, setBand] = useState<ElevationBand>('mid');
 
-  // Historical: last 3 winter seasons (roughly)
-  const today = new Date();
-  const histEnd = format(subYears(today, 0), 'yyyy-03-31');
-  const histStart = format(subYears(today, 3), 'yyyy-10-01');
-  const { data: histDays, loading: histLoading } = useHistorical(
-    resort,
-    histStart,
-    histEnd,
-  );
+  // Recent 14-day snowfall via forecast endpoint's past_days (no archive lag)
+  const [recentDays, setRecentDays] = useState<DailyMetrics[]>([]);
+  const [histLoading, setHistLoading] = useState(false);
+
+  useEffect(() => {
+    if (!resort) return;
+    let cancelled = false;
+    setHistLoading(true);
+    fetchForecast(resort.lat, resort.lon, resort.elevation.mid, 'mid', 1, 14)
+      .then((result) => {
+        if (!cancelled) {
+          // past_days data comes first; exclude today and future
+          const today = new Date().toISOString().slice(0, 10);
+          setRecentDays(result.daily.filter((d) => d.date < today));
+        }
+      })
+      .catch(() => { /* ignore */ })
+      .finally(() => { if (!cancelled) setHistLoading(false); });
+    return () => { cancelled = true; };
+  }, [resort]);
 
   if (!resort) {
     return (
@@ -171,17 +182,54 @@ export function ResortPage() {
         </>
       )}
 
-      {/* Historical */}
+      {/* Recent Snowfall */}
       <section className="resort-page__section">
-        <h2 className="section-title">Historical Snowfall (past 3 seasons)</h2>
+        <h2 className="section-title">Recent Snowfall (past 14 days)</h2>
         {histLoading ? (
           <div className="resort-page__loader">Loading history…</div>
-        ) : histDays.length > 0 ? (
-          <SnowHistoryChart days={histDays} />
+        ) : recentDays.length > 0 ? (
+          <RecentSnowTable days={recentDays} />
         ) : (
-          <p className="resort-page__muted">No historical data available.</p>
+          <p className="resort-page__muted">No recent data available.</p>
         )}
       </section>
+    </div>
+  );
+}
+
+function RecentSnowTable({ days }: { days: DailyMetrics[] }) {
+  const totalSnow = days.reduce((s, d) => s + d.snowfallSum, 0);
+  return (
+    <div className="recent-snow">
+      <p className="recent-snow__total">
+        Total: <strong>{fmtSnow(totalSnow)}</strong> over {days.length} days
+      </p>
+      <div className="recent-snow__bars">
+        {days.map((d) => {
+          const desc = weatherDescription(d.weatherCode);
+          const snow = d.snowfallSum;
+          const maxSnow = Math.max(...days.map((x) => x.snowfallSum), 1);
+          const pct = (snow / maxSnow) * 100;
+          return (
+            <div key={d.date} className="recent-snow__row">
+              <span className="recent-snow__date">{d.date.slice(5)}</span>
+              <span className="recent-snow__icon" title={desc.label}>{desc.icon}</span>
+              <div className="recent-snow__bar-track">
+                <div
+                  className="recent-snow__bar-fill"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="recent-snow__amount">
+                {snow > 0 ? fmtSnow(snow) : '—'}
+              </span>
+              <span className="recent-snow__temps">
+                {fmtTemp(d.temperatureMin)} / {fmtTemp(d.temperatureMax)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -134,8 +134,9 @@ export async function fetchForecast(
   elevation: number,
   band: ElevationBand,
   forecastDays: number = 7,
+  pastDays: number = 0,
 ): Promise<BandForecast> {
-  const url = `${BASE}/forecast?${qs({
+  const params: Record<string, string | number | boolean> = {
     latitude: lat,
     longitude: lon,
     elevation,
@@ -143,7 +144,9 @@ export async function fetchForecast(
     daily: DAILY_VARS,
     timezone: 'auto',
     forecast_days: forecastDays,
-  })}`;
+  };
+  if (pastDays > 0) params.past_days = pastDays;
+  const url = `${BASE}/forecast?${qs(params)}`;
 
   const data = await fetchJSON<OMForecastResponse>(url);
   return {

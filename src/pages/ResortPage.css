@@ -179,3 +179,81 @@
     gap: var(--space-sm);
   }
 }
+
+/* ── Recent Snow Table ───────────────────────────── */
+.recent-snow__total {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+.recent-snow__total strong {
+  color: var(--color-accent);
+  font-size: 1.1rem;
+}
+
+.recent-snow__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recent-snow__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.82rem;
+}
+.recent-snow__row:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.recent-snow__date {
+  width: 42px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-snow__icon {
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.recent-snow__bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-surface-alt);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.recent-snow__bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 4px;
+  min-width: 0;
+  transition: width 0.3s ease;
+}
+
+.recent-snow__amount {
+  width: 42px;
+  flex-shrink: 0;
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-snow__temps {
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
