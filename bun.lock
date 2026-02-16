@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "freesnow",
+      "name": "FreeOpenSnow",
       "dependencies": {
         "date-fns": "^4.1.0",
         "idb-keyval": "^6.2.1",
