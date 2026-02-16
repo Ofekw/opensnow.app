@@ -133,6 +133,7 @@ export async function fetchForecast(
   lon: number,
   elevation: number,
   band: ElevationBand,
+  forecastDays: number = 7,
 ): Promise<BandForecast> {
   const url = `${BASE}/forecast?${qs({
     latitude: lat,
@@ -141,7 +142,7 @@ export async function fetchForecast(
     hourly: HOURLY_VARS,
     daily: DAILY_VARS,
     timezone: 'auto',
-    forecast_days: 7,
+    forecast_days: forecastDays,
   })}`;
 
   const data = await fetchJSON<OMForecastResponse>(url);

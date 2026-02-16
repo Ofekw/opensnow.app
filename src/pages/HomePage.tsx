@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { searchResorts, RESORTS, getResortBySlug } from '@/data/resorts';
 import { useFavorites } from '@/hooks/useFavorites';
 import { ResortCard } from '@/components/ResortCard';
+import { FavoriteCard } from '@/components/FavoriteCard';
 import './HomePage.css';
 
 export function HomePage() {
@@ -54,10 +55,9 @@ export function HomePage() {
           <h2 className="home__region-title">★ Favourites</h2>
           <div className="home__grid">
             {favoriteResorts.map((r) => (
-              <ResortCard
+              <FavoriteCard
                 key={r.slug}
                 resort={r}
-                isFavorite={true}
                 onToggleFavorite={() => toggle(r.slug)}
               />
             ))}
