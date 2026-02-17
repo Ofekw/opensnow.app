@@ -27,3 +27,30 @@ jobs:
 
       - name: Run tests
         run: bun run test -- --passWithNoTests
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server
+        run: bun run preview &
+        env:
+          CI: true
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for server to start..."
+          timeout 30 bash -c 'until curl -s http://localhost:4173 > /dev/null; do sleep 1; done'
+          echo "Server is ready!"
+
+      - name: Generate screenshots
+        run: npm run screenshots
+        env:
+          BASE_URL: http://localhost:4173
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-screenshots
+          path: screenshots/
+          retention-days: 30
