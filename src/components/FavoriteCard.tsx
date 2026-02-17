@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Resort, DailyMetrics, HistoricalSnowDay } from '@/types';
+import type { Resort, DailyMetrics } from '@/types';
 import { fetchForecast } from '@/data/openmeteo';
-import { fetchHistorical } from '@/data/openmeteo';
 import { weatherDescription, fmtTemp, fmtSnow, fmtElevation } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
-import { format, subDays } from 'date-fns';
 import './FavoriteCard.css';
 
 interface Props {
@@ -33,41 +31,37 @@ export function FavoriteCard({ resort, onToggleFavorite }: Props) {
     async function load() {
       setLoading(true);
       try {
-        const today = new Date();
-        // Archive API has a ~5-day lag; use 6 days ago as safe end date
-        const histEnd = format(subDays(today, 6), 'yyyy-MM-dd');
-        const histStart = format(subDays(today, 20), 'yyyy-MM-dd');
-
-        // Fetch independently so one failure doesn't block everything
-        const forecastPromise = fetchForecast(
-          resort.lat, resort.lon, resort.elevation.mid, 'mid', 16, 0, tz,
+        // Fetch forecast with 14 past days (avoids archive API lag)
+        // and 16 future days (for 14-day forecast plus buffer)
+        const forecastData = await fetchForecast(
+          resort.lat, resort.lon, resort.elevation.mid, 'mid', 16, 14, tz,
         ).catch(() => null);
-
-        const histPromise = fetchHistorical(
-          resort.lat, resort.lon, resort.elevation.mid, histStart, histEnd, tz,
-        ).catch(() => []);
-
-        const [forecastData, histData] = await Promise.all([
-          forecastPromise,
-          histPromise,
-        ]);
 
         if (cancelled) return;
 
-        const last14Snow = (histData as HistoricalSnowDay[]).reduce(
-          (sum: number, d: HistoricalSnowDay) => sum + d.snowfall,
+        const dailyDays = forecastData?.daily ?? [];
+        const today = new Date().toISOString().slice(0, 10);
+
+        // Split into past and future days
+        const pastDays = dailyDays.filter((d) => d.date < today);
+        const futureDays = dailyDays.filter((d) => d.date >= today);
+
+        // Calculate last 14 days snowfall from past days
+        const last14Snow = pastDays.reduce(
+          (sum: number, d: DailyMetrics) => sum + d.snowfallSum,
           0,
         );
 
-        const dailyDays = forecastData?.daily ?? [];
-        const next7Snow = dailyDays
+        // Calculate next 7 and 14 days from future days
+        const next7Snow = futureDays
           .slice(0, 7)
           .reduce((sum: number, d: DailyMetrics) => sum + d.snowfallSum, 0);
-        const next14Snow = dailyDays
+        const next14Snow = futureDays
           .slice(0, 14)
           .reduce((sum: number, d: DailyMetrics) => sum + d.snowfallSum, 0);
 
-        const tomorrow = dailyDays[1] ?? null;
+        // Tomorrow is the second day in the future days (index 1)
+        const tomorrow = futureDays[1] ?? null;
 
         setSummary({ last14Snow, next7Snow, next14Snow, tomorrow });
       } catch {
