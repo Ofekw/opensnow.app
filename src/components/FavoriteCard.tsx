@@ -60,7 +60,7 @@ export function FavoriteCard({ resort, onToggleFavorite }: Props) {
           .slice(0, 14)
           .reduce((sum: number, d: DailyMetrics) => sum + d.snowfallSum, 0);
 
-        // Tomorrow is the second day in the future days (index 1)
+        // Tomorrow is at index 1 (today is index 0 in futureDays)
         const tomorrow = futureDays[1] ?? null;
 
         setSummary({ last14Snow, next7Snow, next14Snow, tomorrow });
