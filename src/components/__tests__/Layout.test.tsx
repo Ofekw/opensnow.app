@@ -1,9 +1,34 @@
-import { describe, it, expect } from 'bun:test';
+import { afterEach, describe, it, expect } from 'bun:test';
 import { screen } from '@testing-library/react';
 import { Layout } from '@/components/Layout';
 import { renderWithProviders } from '@/test/test-utils';
 
 describe('Layout', () => {
+  const hadNotification = Object.prototype.hasOwnProperty.call(globalThis, 'Notification');
+  const originalNotification = globalThis.Notification;
+  const hadServiceWorker = Object.prototype.hasOwnProperty.call(navigator, 'serviceWorker');
+  const originalServiceWorker = navigator.serviceWorker;
+
+  afterEach(() => {
+    if (hadNotification) {
+      Object.defineProperty(globalThis, 'Notification', {
+        value: originalNotification,
+        configurable: true,
+        writable: true,
+      });
+    } else {
+      delete (globalThis as Partial<typeof globalThis>).Notification;
+    }
+    if (hadServiceWorker) {
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: originalServiceWorker,
+        configurable: true,
+      });
+    } else {
+      delete (navigator as Partial<Navigator>).serviceWorker;
+    }
+  });
+
   it('renders the units toggle FAB', () => {
     renderWithProviders(<Layout />);
     // Imperial default — shows °F / ft
@@ -20,6 +45,20 @@ describe('Layout', () => {
   it('hides the snow alerts FAB when notifications are not supported', () => {
     renderWithProviders(<Layout />);
     expect(screen.queryByLabelText(/enable snow alerts/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the snow alerts FAB when notifications are supported', () => {
+    Object.defineProperty(globalThis, 'Notification', {
+      value: { permission: 'default', requestPermission: async () => 'default' },
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { ready: Promise.resolve({}) },
+      configurable: true,
+    });
+    renderWithProviders(<Layout />);
+    expect(screen.getByLabelText(/enable snow alerts/i)).toBeInTheDocument();
   });
 
   it('renders footer with Open-Meteo attribution', () => {
