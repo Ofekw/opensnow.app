@@ -186,8 +186,8 @@ A chronological log of all implementation work, decisions, and changes made duri
 - Installed `happy-dom`, `@happy-dom/global-registrator`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
 - Created `bunfig.toml` with test preload configuration
 - Created `src/test/setup-bun.ts` — registers happy-dom globals, extends `expect` with jest-dom matchers, adds automatic DOM cleanup between tests
-- Created separate `vitest.config.ts` (kept for reference; not actively used) alongside the existing `vite.config.ts`
 - Created `src/test/test-utils.tsx` — shared `renderWithProviders()` helper wrapping all app providers (Units, Timezone, Router)
+- Removed `vitest.config.ts` and vitest dependency — no longer needed after switching to bun test
 
 ### Test Suites (116 tests across 12 files)
 - **`src/utils/__tests__/weather.test.ts`** — `weatherDescription`, `fmtTemp`, `fmtElevation`, `cmToIn`, `fmtSnow` (26 tests)
@@ -208,6 +208,7 @@ A chronological log of all implementation work, decisions, and changes made duri
 - Used `happy-dom` + `@happy-dom/global-registrator` instead of `jsdom` — lighter and bun-native
 - Dynamic imports in preload file to ensure `GlobalRegistrator.register()` runs before `@testing-library/dom` evaluates `document.body`
 - Mocked `@/data/openmeteo` and `@/hooks/useWeather` in ResortPage tests via `mock.module()` to avoid real API calls
+- Completely removed vitest dependencies and configuration after confirming bun test works reliably
 
 ---
 
