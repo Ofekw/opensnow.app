@@ -195,6 +195,63 @@ A chronological log of all implementation work, decisions, and changes made duri
 
 ---
 
+## Phase 11: Comprehensive UI Unit Tests
+
+### Test Infrastructure
+- Switched test runner from vitest to **bun test** (bun's native test runner) — vitest v3 has Windows/bun compatibility issues with worker pools
+- Installed `happy-dom`, `@happy-dom/global-registrator`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
+- Created `bunfig.toml` with test preload configuration
+- Created `src/test/setup-bun.ts` — registers happy-dom globals, extends `expect` with jest-dom matchers, adds automatic DOM cleanup between tests
+- Created separate `vitest.config.ts` (kept for reference; not actively used) alongside the existing `vite.config.ts`
+- Created `src/test/test-utils.tsx` — shared `renderWithProviders()` helper wrapping all app providers (Units, Timezone, Router)
+
+### Test Suites (116 tests across 12 files)
+- **`src/utils/__tests__/weather.test.ts`** — `weatherDescription`, `fmtTemp`, `fmtElevation`, `cmToIn`, `fmtSnow` (26 tests)
+- **`src/data/__tests__/favorites.test.ts`** — localStorage-based favorites CRUD: `getFavorites`, `isFavorite`, `addFavorite`, `removeFavorite`, `toggleFavorite` (11 tests)
+- **`src/data/__tests__/resorts.test.ts`** — Resort catalog integrity (unique slugs, valid fields, elevation ordering), `getResortBySlug`, `searchResorts` (12 tests)
+- **`src/context/__tests__/UnitsContext.test.tsx`** — Imperial/metric toggle, localStorage persistence, derived units (5 tests)
+- **`src/context/__tests__/TimezoneContext.test.tsx`** — Timezone selection, persistence, `fmtDate`, `getUtcOffset`, `TZ_OPTIONS` (12 tests)
+- **`src/hooks/__tests__/useFavorites.test.ts`** — Hook toggle, multi-favorite management, persistence (7 tests)
+- **`src/components/__tests__/ElevationToggle.test.tsx`** — Band rendering, active state, onChange callback, elevation display (5 tests)
+- **`src/components/__tests__/ResortCard.test.tsx`** — Name/region rendering, favorite star toggle, elevation stats, conditional acres (9 tests)
+- **`src/components/__tests__/Layout.test.tsx`** — FAB buttons, footer attribution, feedback link (5 tests)
+- **`src/pages/__tests__/HomePage.test.tsx`** — Hero section, search filtering, region grouping, no-match message, favorites section visibility (9 tests)
+- **`src/pages/__tests__/ResortPage.test.tsx`** — Resort detail rendering with mocked API calls, elevation stats, toggle, refresh, favorites, 404 handling (11 tests)
+- **`src/App.test.tsx`** — Route rendering, layout presence (2 tests)
+
+### Key Technical Decisions
+- Used `bun:test` instead of `vitest` — vitest v3 fails on Windows/bun due to `pathToFileURL` errors in `vite-node` worker processes and missing `port.addListener` in bun's `worker_threads`
+- Used `happy-dom` + `@happy-dom/global-registrator` instead of `jsdom` — lighter and bun-native
+- Dynamic imports in preload file to ensure `GlobalRegistrator.register()` runs before `@testing-library/dom` evaluates `document.body`
+- Mocked `@/data/openmeteo` and `@/hooks/useWeather` in ResortPage tests via `mock.module()` to avoid real API calls
+
+---
+
+---
+
+## Phase 12: PR Screenshot Generation
+
+### Visual Regression Testing for PRs
+- Added Playwright as a dev dependency for automated screenshot generation
+- Created `scripts/take-screenshots.js` — Node.js script that:
+  - Launches headless Chromium via Playwright
+  - Takes desktop (1920x1080) and mobile (375x667) screenshots
+  - Captures home page and Crystal Mountain resort detail page
+  - Saves screenshots to `screenshots/` directory (gitignored)
+- Updated PR CI workflow (`.github/workflows/pr-ci.yml`) to:
+  - Install Playwright browsers after build
+  - Start Vite preview server on port 4173
+  - Run screenshot generation script
+  - Upload screenshots as workflow artifacts (30-day retention)
+- Added `npm run screenshots` script to `package.json`
+- Screenshots help PR reviewers visually test for regressions on key pages
+
+### Pages Captured
+- Home page (main resort list with search and favorites)
+- Crystal Mountain resort page (representative detail page with charts, forecasts, and interactive elements)
+
+---
+
 ## Current File Inventory
 
 ```
@@ -234,6 +291,54 @@ src/
 └── styles/
 ```
 
+---
+
+## Phase 11: Frontend-Only Snow Alerts (Android PWA MVP)
+
+### What changed
+- Added a frontend-only snow alert flow using Notification API + service worker periodic background sync (best-effort, no backend).
+- Added a new alerts FAB in the top-right controls so users can enable notifications and see alert status.
+- Added shared IndexedDB-backed alert settings storage for service worker + app coordination (`favoriteSlugs`, timezone, threshold, enabled flag).
+- Implemented service-worker periodic checks for favorited resorts and notification dispatch when forecast daily snowfall crosses the 3-inch threshold (7.62 cm).
+
+### Why it changed
+- Enables alerting for a backend-less MVP while preserving FreeSnow's core architecture (client-only data + local state).
+- Provides practical Android-installed PWA support for background checks, with explicit best-effort behavior due browser/OS scheduling constraints.
+
+### Key files affected
+- `vite.config.ts` (moved PWA to `injectManifest` strategy)
+- `src/sw.ts` (custom service worker: caching + periodic sync handler + notification click routing)
+- `src/alerts/storage.ts`
+- `src/alerts/snowAlerts.ts`
+- `src/hooks/useSnowAlerts.ts`
+- `src/components/Layout.tsx`
+- `src/components/Layout.css`
+- `src/main.tsx`
+- `src/components/__tests__/Layout.test.tsx`
+
+### Follow-up notes
+- Periodic background sync cadence is controlled by Android/Chromium and is not guaranteed to run exactly morning/evening.
+- Alert dedupe is per resort + forecast date to reduce repeated notifications for the same snow day.
+
+## Phase 12: Compact 🔔 Alert Toggle
+
+### What changed
+- Replaced the wide status-label FAB ("🔔 Enable Alerts" / "🔔 Alerts On") with a compact icon-only 🔔 toggle button next to units and timezone controls.
+- Added enable/disable toggle: 🔔 (on, accent background) ↔ 🔕 (off, neutral). Blocked state uses `line-through` styling.
+- Extended `useSnowAlerts` hook with `enabled` state, `disableAlerts`, and `toggleAlerts` callbacks.
+- Added CSS classes `.fab--alert`, `.fab--alert-on`, `.fab--alert-blocked` for visual state.
+- Updated Layout and useSnowAlerts tests (now 134 tests across 15 files).
+
+### Why it changed
+- User requested a compact 🔔 icon toggle next to existing control buttons for enabling/disabling snow alerts on Android installed web app.
+
+### Key files affected
+- `src/hooks/useSnowAlerts.ts` (added `enabled`, `toggleAlerts`, `disableAlerts`, `statusIcon`)
+- `src/components/Layout.tsx` (compact icon button, toggle wiring, conditional CSS classes)
+- `src/components/Layout.css` (`.fab--alert`, `.fab--alert-on`, `.fab--alert-blocked`)
+- `src/components/__tests__/Layout.test.tsx`
+- `src/hooks/__tests__/useSnowAlerts.test.tsx` (added toggle/disable tests)
+
 ## Known Technical Notes
 
 - **Bun PATH**: Must add `$env:PATH = "$env:USERPROFILE\.bun\bin;$env:PATH"` each PowerShell session
@@ -265,6 +370,8 @@ src/
 | Imperial / Metric toggle | ✅ Complete |
 | Timezone picker (13 NA zones + UTC) | ✅ Complete |
 | GitHub repo link + feedback button | ✅ Complete |
+| Comprehensive UI unit tests | ✅ Complete |
+| PR screenshot generation | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |

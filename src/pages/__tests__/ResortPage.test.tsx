@@ -1,0 +1,182 @@
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { screen } from '@testing-library/react';
+import { Routes, Route } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
+import { UnitsProvider } from '@/context/UnitsContext';
+import { TimezoneProvider } from '@/context/TimezoneContext';
+import { render } from '@testing-library/react';
+import type { BandForecast } from '@/types';
+
+function makeBandForecast(band: 'base' | 'mid' | 'top', elevation: number): BandForecast {
+  return {
+    band,
+    elevation,
+    hourly: [
+      {
+        time: '2025-01-15T12:00:00',
+        temperature: -5,
+        apparentTemperature: -10,
+        relativeHumidity: 80,
+        precipitation: 0,
+        rain: 0,
+        snowfall: 2,
+        precipitationProbability: 60,
+        weatherCode: 73,
+        windSpeed: 15,
+        windDirection: 270,
+        windGusts: 25,
+        freezingLevelHeight: 2500,
+      },
+    ],
+    daily: [
+      {
+        date: '2025-01-15',
+        weatherCode: 73,
+        temperatureMax: -2,
+        temperatureMin: -10,
+        apparentTemperatureMax: -5,
+        apparentTemperatureMin: -15,
+        uvIndexMax: 3,
+        precipitationSum: 5,
+        rainSum: 0,
+        snowfallSum: 5,
+        precipitationProbabilityMax: 80,
+        windSpeedMax: 20,
+        windGustsMax: 35,
+      },
+    ],
+  };
+}
+
+// Mock modules before importing ResortPage
+mock.module('@/data/openmeteo', () => ({
+  fetchForecast: mock(() =>
+    Promise.resolve({
+      band: 'mid' as const,
+      elevation: 3050,
+      hourly: [],
+      daily: [],
+    }),
+  ),
+  fetchHistorical: mock(() => Promise.resolve([])),
+}));
+
+mock.module('@/hooks/useWeather', () => ({
+  useForecast: mock(() => ({
+    forecast: {
+      resort: {
+        slug: 'vail-co',
+        name: 'Vail',
+        region: 'Colorado',
+        country: 'US',
+        lat: 39.6403,
+        lon: -106.3742,
+        elevation: { base: 2475, mid: 3050, top: 3527 },
+        verticalDrop: 1052,
+        lifts: 31,
+        acres: 5317,
+        website: 'https://www.vail.com',
+      },
+      fetchedAt: '2025-01-15T00:00:00.000Z',
+      base: makeBandForecast('base', 2475),
+      mid: makeBandForecast('mid', 3050),
+      top: makeBandForecast('top', 3527),
+    },
+    loading: false,
+    error: null,
+    refetch: mock(() => {}),
+  })),
+  useHistorical: mock(() => ({
+    data: [],
+    loading: false,
+    error: null,
+  })),
+}));
+
+// Import after mocks are set up
+const { ResortPage } = await import('@/pages/ResortPage');
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+function renderResortPage(slug = 'vail-co') {
+  return render(
+    <UnitsProvider>
+      <TimezoneProvider>
+        <MemoryRouter initialEntries={[`/resort/${slug}`]}>
+          <Routes>
+            <Route path="/resort/:slug" element={<ResortPage />} />
+          </Routes>
+        </MemoryRouter>
+      </TimezoneProvider>
+    </UnitsProvider>,
+  );
+}
+
+describe('ResortPage', () => {
+  it('renders resort name', () => {
+    renderResortPage();
+    expect(screen.getByText('Vail')).toBeInTheDocument();
+  });
+
+  it('renders region and country', () => {
+    renderResortPage();
+    expect(screen.getByText(/Colorado, US/)).toBeInTheDocument();
+  });
+
+  it('renders back link', () => {
+    renderResortPage();
+    expect(screen.getByText('← All Resorts')).toBeInTheDocument();
+  });
+
+  it('renders website link', () => {
+    renderResortPage();
+    const link = screen.getByText('Website ↗');
+    expect(link).toHaveAttribute('href', 'https://www.vail.com');
+  });
+
+  it('renders elevation stats', () => {
+    renderResortPage();
+    // Stats section labels (duplicated by ElevationToggle, so use getAllByText)
+    expect(screen.getAllByText('Base').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Mid').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Top').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Vertical')).toBeInTheDocument();
+  });
+
+  it('renders lifts count', () => {
+    renderResortPage();
+    expect(screen.getByText('Lifts')).toBeInTheDocument();
+    expect(screen.getByText('31')).toBeInTheDocument();
+  });
+
+  it('renders acres', () => {
+    renderResortPage();
+    expect(screen.getByText('Acres')).toBeInTheDocument();
+    expect(screen.getByText('5,317')).toBeInTheDocument();
+  });
+
+  it('renders elevation toggle', () => {
+    renderResortPage();
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+  });
+
+  it('renders refresh button', () => {
+    renderResortPage();
+    expect(screen.getByText('↻ Refresh')).toBeInTheDocument();
+  });
+
+  it('renders favorite toggle button', () => {
+    renderResortPage();
+    expect(
+      screen.getByLabelText(/add to favorites|remove from favorites/i),
+    ).toBeInTheDocument();
+  });
+
+  it('shows not found for invalid slug', () => {
+    renderResortPage('nonexistent-resort');
+    expect(screen.getByText('Resort not found')).toBeInTheDocument();
+    expect(screen.getByText('← Back to all resorts')).toBeInTheDocument();
+  });
+});
