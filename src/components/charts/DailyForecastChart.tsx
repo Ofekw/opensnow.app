@@ -10,12 +10,41 @@ import {
   Legend,
 } from 'recharts';
 import type { DailyMetrics } from '@/types';
-import { cmToIn } from '@/utils/weather';
+import { cmToIn, getRainDotRating } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 
 interface Props {
   daily: DailyMetrics[];
+}
+
+// Custom shape to render rain dots inside snow bars
+function RainDots(props: any) {
+  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+  const rainDots = payload?.rainDots ?? 0;
+  if (!rainDots || rainDots === 0) return <g />;
+  
+  const dotRadius = Math.min(width / 4, 3);
+  const dotSpacing = dotRadius * 2.5;
+  const totalHeight = rainDots * dotSpacing - dotSpacing / 2;
+  const startY = y + height - totalHeight - dotRadius;
+  
+  const dots = [];
+  for (let i = 0; i < rainDots; i++) {
+    dots.push(
+      <circle
+        key={i}
+        cx={x + width / 2}
+        cy={startY + i * dotSpacing}
+        r={dotRadius}
+        fill="#6366f1"
+        stroke="#1e293b"
+        strokeWidth={1}
+      />
+    );
+  }
+  
+  return <g>{dots}</g>;
 }
 
 export function DailyForecastChart({ daily }: Props) {
@@ -27,6 +56,7 @@ export function DailyForecastChart({ daily }: Props) {
     date: fmtDate(d.date + 'T12:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' }),
     snow: isImperial ? +cmToIn(d.snowfallSum).toFixed(1) : +d.snowfallSum.toFixed(1),
     rain: isImperial ? +(d.rainSum / 25.4).toFixed(2) : +d.rainSum.toFixed(1),
+    rainDots: getRainDotRating(isImperial ? d.rainSum / 25.4 : d.rainSum / 10),
     high: isImperial ? Math.round(d.temperatureMax * 9 / 5 + 32) : Math.round(d.temperatureMax),
     low: isImperial ? Math.round(d.temperatureMin * 9 / 5 + 32) : Math.round(d.temperatureMin),
     feelsHigh: isImperial ? Math.round(d.apparentTemperatureMax * 9 / 5 + 32) : Math.round(d.apparentTemperatureMax),
@@ -38,7 +68,7 @@ export function DailyForecastChart({ daily }: Props) {
   const tempLabel = `°${tempUnit}`;
 
   return (
-    <div style={{ width: '100%', height: 320 }}>
+    <div style={{ width: '100%', height: 320, position: 'relative' }}>
       <ResponsiveContainer>
         <ComposedChart data={data} barCategoryGap="20%" barGap="-20%" margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -70,10 +100,17 @@ export function DailyForecastChart({ daily }: Props) {
               color: '#f1f5f9',
               fontSize: 13,
             }}
+            formatter={(value: number, name: string) => {
+              if (name.includes('Rain')) {
+                const dotCount = typeof value === 'number' ? Math.round(value) : 0;
+                return [`${dotCount} dot${dotCount !== 1 ? 's' : ''}`, name];
+              }
+              return [value, name];
+            }}
           />
           <Legend wrapperStyle={{ fontSize: 12, color: '#94a3b8' }} />
           <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={30} />
-          <Bar yAxisId="precip" dataKey="rain" name={`Rain (${precipLabel})`} fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={30} fillOpacity={0.75} />
+          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (dots: 0-3)" fill="transparent" maxBarSize={30} shape={RainDots} />
           <Line yAxisId="temp" type="monotone" dataKey="high" name={`High ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} />
           <Line yAxisId="temp" type="monotone" dataKey="low" name={`Low ${tempLabel}`} stroke="#3b82f6" strokeWidth={2} dot={false} />
           <Line yAxisId="temp" type="monotone" dataKey="feelsHigh" name="Feels High" stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} />

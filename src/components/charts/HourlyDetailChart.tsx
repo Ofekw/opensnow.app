@@ -10,12 +10,41 @@ import {
   Legend,
 } from 'recharts';
 import type { HourlyMetrics } from '@/types';
-import { cmToIn } from '@/utils/weather';
+import { cmToIn, getRainDotRating } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 
 interface Props {
   hourly: HourlyMetrics[];
+}
+
+// Custom shape to render rain dots inside snow bars
+function RainDots(props: any) {
+  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+  const rainDots = payload?.rainDots ?? 0;
+  if (!rainDots || rainDots === 0) return <g />;
+  
+  const dotRadius = Math.min(width / 4, 2.5);
+  const dotSpacing = dotRadius * 2.5;
+  const totalHeight = rainDots * dotSpacing - dotSpacing / 2;
+  const startY = y + height - totalHeight - dotRadius;
+  
+  const dots = [];
+  for (let i = 0; i < rainDots; i++) {
+    dots.push(
+      <circle
+        key={i}
+        cx={x + width / 2}
+        cy={startY + i * dotSpacing}
+        r={dotRadius}
+        fill="#6366f1"
+        stroke="#1e293b"
+        strokeWidth={1}
+      />
+    );
+  }
+  
+  return <g>{dots}</g>;
 }
 
 export function HourlyDetailChart({ hourly }: Props) {
@@ -27,6 +56,8 @@ export function HourlyDetailChart({ hourly }: Props) {
     time: fmtDate(h.time, { weekday: 'short', hour: 'numeric' }),
     snow: isImperial ? +cmToIn(h.snowfall).toFixed(2) : +h.snowfall.toFixed(1),
     rain: isImperial ? +(h.rain / 25.4).toFixed(2) : +h.rain.toFixed(1),
+    // Scale rain by 1/6 for hourly as specified in requirements
+    rainDots: getRainDotRating((isImperial ? h.rain / 25.4 : h.rain / 10) / 6),
     temp: isImperial ? Math.round(h.temperature * 9 / 5 + 32) : Math.round(h.temperature),
     feels: isImperial ? Math.round(h.apparentTemperature * 9 / 5 + 32) : Math.round(h.apparentTemperature),
     wind: isImperial ? Math.round(h.windSpeed * 0.621371) : Math.round(h.windSpeed),
@@ -67,10 +98,17 @@ export function HourlyDetailChart({ hourly }: Props) {
               color: '#f1f5f9',
               fontSize: 13,
             }}
+            formatter={(value: number, name: string) => {
+              if (name.includes('Rain')) {
+                const dotCount = typeof value === 'number' ? Math.round(value) : 0;
+                return [`${dotCount} dot${dotCount !== 1 ? 's' : ''}`, name];
+              }
+              return [value, name];
+            }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[3, 3, 0, 0]} />
-          <Bar yAxisId="precip" dataKey="rain" name={`Rain (${precipLabel})`} fill="#6366f1" radius={[3, 3, 0, 0]} />
+          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (dots: 0-3)" fill="transparent" shape={RainDots} />
           <Line yAxisId="temp" type="monotone" dataKey="temp" name={`Temp ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} />
           <Line yAxisId="temp" type="monotone" dataKey="feels" name={`Feels ${tempLabel}`} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} />
         </ComposedChart>
