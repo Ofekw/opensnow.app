@@ -109,12 +109,17 @@ describe('useSnowAlerts', () => {
     expect(result.current.permission).toBe('unsupported');
     expect(result.current.isSupported).toBe(false);
     expect(result.current.statusLabel).toBe('🔔 Alerts N/A');
+    expect(result.current.enabled).toBe(false);
   });
 
-  it('shows blocked state when permission is denied', () => {
+  it('shows blocked state when permission is denied', async () => {
     setNotification('denied');
 
     const { result } = renderHook(() => useSnowAlerts(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.periodicSupported).toBe(false);
+    });
 
     expect(result.current.statusLabel).toBe('🔔 Alerts Blocked');
     expect(result.current.statusTitle).toMatch(/browser settings/i);
@@ -130,7 +135,13 @@ describe('useSnowAlerts', () => {
       expect(result.current.periodicSupported).toBe(true);
     });
 
+    // enabled is hydrated from persisted settings (synced on mount)
+    await waitFor(() => {
+      expect(result.current.enabled).toBe(true);
+    });
+
     expect(result.current.statusLabel).toBe('🔔 Alerts On');
+    expect(result.current.statusIcon).toBe('🔔');
 
     const settings = await getSnowAlertSettings();
     expect(settings.favoriteSlugs).toEqual(['vail-co']);
@@ -148,6 +159,10 @@ describe('useSnowAlerts', () => {
       expect(result.current.periodicSupported).toBe(false);
     });
 
+    await waitFor(() => {
+      expect(result.current.enabled).toBe(true);
+    });
+
     expect(result.current.statusLabel).toBe('🔔 Alerts On*');
     expect(result.current.statusTitle).toMatch(/not available/i);
   });
@@ -162,8 +177,58 @@ describe('useSnowAlerts', () => {
     });
 
     expect(result.current.permission).toBe('granted');
+    expect(result.current.enabled).toBe(true);
 
     const settings = await getSnowAlertSettings();
     expect(settings.enabled).toBe(true);
+  });
+
+  it('disableAlerts sets enabled to false', async () => {
+    setNotification('granted');
+    setServiceWorker({ register: async () => {} });
+
+    const { result } = renderHook(() => useSnowAlerts(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.enabled).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.disableAlerts();
+    });
+
+    expect(result.current.enabled).toBe(false);
+    expect(result.current.statusIcon).toBe('🔕');
+    expect(result.current.statusLabel).toBe('🔕 Alerts Off');
+
+    const settings = await getSnowAlertSettings();
+    expect(settings.enabled).toBe(false);
+  });
+
+  it('toggleAlerts enables when off and disables when on', async () => {
+    setNotification('granted');
+    setServiceWorker({ register: async () => {} });
+
+    const { result } = renderHook(() => useSnowAlerts(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.enabled).toBe(true);
+    });
+
+    // Toggle off
+    await act(async () => {
+      await result.current.toggleAlerts();
+    });
+
+    expect(result.current.enabled).toBe(false);
+    expect(result.current.statusIcon).toBe('🔕');
+
+    // Toggle back on
+    await act(async () => {
+      await result.current.toggleAlerts();
+    });
+
+    expect(result.current.enabled).toBe(true);
+    expect(result.current.statusIcon).toBe('🔔');
   });
 });

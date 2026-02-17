@@ -8,7 +8,7 @@ import './Layout.css';
 export function Layout() {
   const { units, toggle, temp, elev } = useUnits();
   const { tzRaw, tzLabel, setTz } = useTimezone();
-  const { statusLabel, statusTitle, requestAlerts, isSupported } = useSnowAlerts();
+  const { statusIcon, statusTitle, toggleAlerts, isSupported, enabled, permission } = useSnowAlerts();
   const [tzOpen, setTzOpen] = useState(false);
   const [tzSearch, setTzSearch] = useState('');
   const tzRef = useRef<HTMLDivElement>(null);
@@ -68,13 +68,13 @@ export function Layout() {
         </button>
 
         <button
-          className="fab"
-          onClick={requestAlerts}
-          aria-label="Snow alerts"
+          className={`fab fab--alert${permission === 'denied' ? ' fab--alert-blocked' : enabled ? ' fab--alert-on' : ''}`}
+          onClick={toggleAlerts}
+          aria-label={enabled ? 'Disable snow alerts' : 'Enable snow alerts'}
           title={statusTitle}
           disabled={!isSupported}
         >
-          {statusLabel}
+          {statusIcon}
         </button>
 
         <div className="tz-picker" ref={tzRef}>

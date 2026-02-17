@@ -279,6 +279,25 @@ src/
 - Periodic background sync cadence is controlled by Android/Chromium and is not guaranteed to run exactly morning/evening.
 - Alert dedupe is per resort + forecast date to reduce repeated notifications for the same snow day.
 
+## Phase 12: Compact 🔔 Alert Toggle
+
+### What changed
+- Replaced the wide status-label FAB ("🔔 Enable Alerts" / "🔔 Alerts On") with a compact icon-only 🔔 toggle button next to units and timezone controls.
+- Added enable/disable toggle: 🔔 (on, accent background) ↔ 🔕 (off, neutral). Blocked state uses `line-through` styling.
+- Extended `useSnowAlerts` hook with `enabled` state, `disableAlerts`, and `toggleAlerts` callbacks.
+- Added CSS classes `.fab--alert`, `.fab--alert-on`, `.fab--alert-blocked` for visual state.
+- Updated Layout and useSnowAlerts tests (now 134 tests across 15 files).
+
+### Why it changed
+- User requested a compact 🔔 icon toggle next to existing control buttons for enabling/disabling snow alerts on Android installed web app.
+
+### Key files affected
+- `src/hooks/useSnowAlerts.ts` (added `enabled`, `toggleAlerts`, `disableAlerts`, `statusIcon`)
+- `src/components/Layout.tsx` (compact icon button, toggle wiring, conditional CSS classes)
+- `src/components/Layout.css` (`.fab--alert`, `.fab--alert-on`, `.fab--alert-blocked`)
+- `src/components/__tests__/Layout.test.tsx`
+- `src/hooks/__tests__/useSnowAlerts.test.tsx` (added toggle/disable tests)
+
 ## Known Technical Notes
 
 - **Bun PATH**: Must add `$env:PATH = "$env:USERPROFILE\.bun\bin;$env:PATH"` each PowerShell session
