@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import type { DailyMetrics } from '@/types';
-import { cmToIn, getRainDotRating } from '@/utils/weather';
+import { cmToIn, getRainDotRating, MM_PER_INCH, MM_PER_CM } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 
@@ -19,7 +19,15 @@ interface Props {
 }
 
 // Custom shape to render rain dots inside snow bars
-function RainDots(props: any) {
+interface RainDotsShapeProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { rainDots?: number };
+}
+
+function RainDots(props: RainDotsShapeProps) {
   const { x = 0, y = 0, width = 0, height = 0, payload } = props;
   const rainDots = payload?.rainDots ?? 0;
   if (!rainDots || rainDots === 0) return <g />;
@@ -55,8 +63,8 @@ export function DailyForecastChart({ daily }: Props) {
   const data = daily.map((d) => ({
     date: fmtDate(d.date + 'T12:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' }),
     snow: isImperial ? +cmToIn(d.snowfallSum).toFixed(1) : +d.snowfallSum.toFixed(1),
-    rain: isImperial ? +(d.rainSum / 25.4).toFixed(2) : +d.rainSum.toFixed(1),
-    rainDots: getRainDotRating(isImperial ? d.rainSum / 25.4 : d.rainSum / 10),
+    rain: isImperial ? +(d.rainSum / MM_PER_INCH).toFixed(2) : +d.rainSum.toFixed(1),
+    rainDots: getRainDotRating(isImperial ? d.rainSum / MM_PER_INCH : d.rainSum / MM_PER_CM),
     high: isImperial ? Math.round(d.temperatureMax * 9 / 5 + 32) : Math.round(d.temperatureMax),
     low: isImperial ? Math.round(d.temperatureMin * 9 / 5 + 32) : Math.round(d.temperatureMin),
     feelsHigh: isImperial ? Math.round(d.apparentTemperatureMax * 9 / 5 + 32) : Math.round(d.apparentTemperatureMax),

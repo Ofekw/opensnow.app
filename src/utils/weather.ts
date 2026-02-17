@@ -64,6 +64,12 @@ export function cmToIn(cm: number): number {
   return cm / 2.54;
 }
 
+/** mm → inches conversion factor */
+export const MM_PER_INCH = 25.4;
+
+/** mm → cm conversion factor */
+export const MM_PER_CM = 10;
+
 /** Format snowfall for display */
 export function fmtSnow(cm: number, unit: 'in' | 'cm' = 'in'): string {
   if (unit === 'in') {

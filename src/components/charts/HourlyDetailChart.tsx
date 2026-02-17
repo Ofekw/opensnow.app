@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import type { HourlyMetrics } from '@/types';
-import { cmToIn, getRainDotRating } from '@/utils/weather';
+import { cmToIn, getRainDotRating, MM_PER_INCH, MM_PER_CM } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 
@@ -19,7 +19,15 @@ interface Props {
 }
 
 // Custom shape to render rain dots inside snow bars
-function RainDots(props: any) {
+interface RainDotsShapeProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { rainDots?: number };
+}
+
+function RainDots(props: RainDotsShapeProps) {
   const { x = 0, y = 0, width = 0, height = 0, payload } = props;
   const rainDots = payload?.rainDots ?? 0;
   if (!rainDots || rainDots === 0) return <g />;
@@ -55,9 +63,9 @@ export function HourlyDetailChart({ hourly }: Props) {
   const data = hourly.map((h) => ({
     time: fmtDate(h.time, { weekday: 'short', hour: 'numeric' }),
     snow: isImperial ? +cmToIn(h.snowfall).toFixed(2) : +h.snowfall.toFixed(1),
-    rain: isImperial ? +(h.rain / 25.4).toFixed(2) : +h.rain.toFixed(1),
+    rain: isImperial ? +(h.rain / MM_PER_INCH).toFixed(2) : +h.rain.toFixed(1),
     // Scale rain by 1/6 for hourly as specified in requirements
-    rainDots: getRainDotRating((isImperial ? h.rain / 25.4 : h.rain / 10) / 6),
+    rainDots: getRainDotRating((isImperial ? h.rain / MM_PER_INCH : h.rain / MM_PER_CM) / 6),
     temp: isImperial ? Math.round(h.temperature * 9 / 5 + 32) : Math.round(h.temperature),
     feels: isImperial ? Math.round(h.apparentTemperature * 9 / 5 + 32) : Math.round(h.apparentTemperature),
     wind: isImperial ? Math.round(h.windSpeed * 0.621371) : Math.round(h.windSpeed),
