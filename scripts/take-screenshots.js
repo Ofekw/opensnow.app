@@ -1,17 +1,19 @@
 /**
  * Screenshot generation script for PR CI
  * Takes screenshots of key pages in desktop and mobile viewports
+ * Uses mocked API responses for consistent, deterministic screenshots
  */
 
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
-import { mkdir } from 'fs/promises';
+import { mkdir, readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const SCREENSHOT_DIR = resolve(__dirname, '../screenshots');
+const MOCKS_DIR = resolve(__dirname, 'mocks');
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 
 // Viewport configurations
@@ -26,13 +28,24 @@ const PAGES = [
   { name: 'crystal-mountain', path: '/resort/crystal-mountain-wa', waitFor: 'h1' },
 ];
 
+// Load mock data
+async function loadMockData() {
+  const mockFile = resolve(MOCKS_DIR, 'crystal-mountain-forecast.json');
+  const content = await readFile(mockFile, 'utf-8');
+  return JSON.parse(content);
+}
+
 async function takeScreenshots() {
   console.log('Starting screenshot generation...');
   console.log(`Base URL: ${BASE_URL}`);
   console.log(`Screenshot directory: ${SCREENSHOT_DIR}`);
+  console.log('Using mocked API responses for deterministic screenshots');
 
   // Ensure screenshot directory exists
   await mkdir(SCREENSHOT_DIR, { recursive: true });
+
+  // Load mock data
+  const mockForecast = await loadMockData();
 
   // Launch browser
   const browser = await chromium.launch();
@@ -46,6 +59,18 @@ async function takeScreenshots() {
       });
       
       const page = await context.newPage();
+      
+      // Intercept Open-Meteo API calls and return mock data
+      await page.route('**/api.open-meteo.com/**', async (route) => {
+        const url = route.request().url();
+        console.log(`  🔀 Intercepted API call: ${url.substring(0, 80)}...`);
+        
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(mockForecast),
+        });
+      });
       
       for (const pageConfig of PAGES) {
         const url = `${BASE_URL}${pageConfig.path}`;
