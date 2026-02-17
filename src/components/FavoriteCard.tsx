@@ -59,11 +59,8 @@ export function FavoriteCard({ resort, onToggleFavorite }: Props) {
           .slice(0, 14)
           .reduce((sum: number, d: DailyMetrics) => sum + d.snowfallSum, 0);
 
-        // Tomorrow: find the first day after today
-        const tomorrowDate = new Date();
-        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-        const tomorrowStr = tomorrowDate.toISOString().slice(0, 10);
-        const tomorrow = futureDays.find((d) => d.date === tomorrowStr) ?? null;
+        // Tomorrow: second element in futureDays (first is today)
+        const tomorrow = futureDays[1] ?? null;
 
         setSummary({ last14Snow, next7Snow, next14Snow, tomorrow });
       } catch {
