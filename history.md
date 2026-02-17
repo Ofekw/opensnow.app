@@ -179,6 +179,38 @@ A chronological log of all implementation work, decisions, and changes made duri
 
 ---
 
+## Phase 10: Comprehensive UI Unit Tests
+
+### Test Infrastructure
+- Switched test runner from vitest to **bun test** (bun's native test runner) — vitest v3 has Windows/bun compatibility issues with worker pools
+- Installed `happy-dom`, `@happy-dom/global-registrator`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`
+- Created `bunfig.toml` with test preload configuration
+- Created `src/test/setup-bun.ts` — registers happy-dom globals, extends `expect` with jest-dom matchers, adds automatic DOM cleanup between tests
+- Created separate `vitest.config.ts` (kept for reference; not actively used) alongside the existing `vite.config.ts`
+- Created `src/test/test-utils.tsx` — shared `renderWithProviders()` helper wrapping all app providers (Units, Timezone, Router)
+
+### Test Suites (116 tests across 12 files)
+- **`src/utils/__tests__/weather.test.ts`** — `weatherDescription`, `fmtTemp`, `fmtElevation`, `cmToIn`, `fmtSnow` (26 tests)
+- **`src/data/__tests__/favorites.test.ts`** — localStorage-based favorites CRUD: `getFavorites`, `isFavorite`, `addFavorite`, `removeFavorite`, `toggleFavorite` (11 tests)
+- **`src/data/__tests__/resorts.test.ts`** — Resort catalog integrity (unique slugs, valid fields, elevation ordering), `getResortBySlug`, `searchResorts` (12 tests)
+- **`src/context/__tests__/UnitsContext.test.tsx`** — Imperial/metric toggle, localStorage persistence, derived units (5 tests)
+- **`src/context/__tests__/TimezoneContext.test.tsx`** — Timezone selection, persistence, `fmtDate`, `getUtcOffset`, `TZ_OPTIONS` (12 tests)
+- **`src/hooks/__tests__/useFavorites.test.ts`** — Hook toggle, multi-favorite management, persistence (7 tests)
+- **`src/components/__tests__/ElevationToggle.test.tsx`** — Band rendering, active state, onChange callback, elevation display (5 tests)
+- **`src/components/__tests__/ResortCard.test.tsx`** — Name/region rendering, favorite star toggle, elevation stats, conditional acres (9 tests)
+- **`src/components/__tests__/Layout.test.tsx`** — FAB buttons, footer attribution, feedback link (5 tests)
+- **`src/pages/__tests__/HomePage.test.tsx`** — Hero section, search filtering, region grouping, no-match message, favorites section visibility (9 tests)
+- **`src/pages/__tests__/ResortPage.test.tsx`** — Resort detail rendering with mocked API calls, elevation stats, toggle, refresh, favorites, 404 handling (11 tests)
+- **`src/App.test.tsx`** — Route rendering, layout presence (2 tests)
+
+### Key Technical Decisions
+- Used `bun:test` instead of `vitest` — vitest v3 fails on Windows/bun due to `pathToFileURL` errors in `vite-node` worker processes and missing `port.addListener` in bun's `worker_threads`
+- Used `happy-dom` + `@happy-dom/global-registrator` instead of `jsdom` — lighter and bun-native
+- Dynamic imports in preload file to ensure `GlobalRegistrator.register()` runs before `@testing-library/dom` evaluates `document.body`
+- Mocked `@/data/openmeteo` and `@/hooks/useWeather` in ResortPage tests via `mock.module()` to avoid real API calls
+
+---
+
 ## Current File Inventory
 
 ```
@@ -249,6 +281,7 @@ src/
 | Imperial / Metric toggle | ✅ Complete |
 | Timezone picker (13 NA zones + UTC) | ✅ Complete |
 | GitHub repo link + feedback button | ✅ Complete |
+| Comprehensive UI unit tests | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |
