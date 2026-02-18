@@ -47,8 +47,8 @@ export function ResortPage() {
     return () => { cancelled = true; };
   }, [resort, tz]);
 
-  // Reset selected day when forecast changes
-  useEffect(() => { setSelectedDayIdx(0); }, [forecast, band]);
+  // Reset selected day when forecast data is refetched (not on band change)
+  useEffect(() => { setSelectedDayIdx(0); }, [forecast]);
 
   const bandData: BandForecast | undefined = forecast?.[band];
 
