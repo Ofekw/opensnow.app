@@ -20,7 +20,7 @@
 
 ## Testing responsibility
 - For any code changes, ensure that the existing test suite passes without modifications and there are unit tests covering the changed code paths and scenarios.
-- Do modify existing tests unless explicitly asked. If existing tests fail due to the change, analyze whether the failure is expected and if the test should be updated or if the code change should be adjusted and the tests found a real regression.
+- Do not modify existing tests unless explicitly asked. If existing tests fail due to the change, analyze whether the failure is expected and if the test should be updated or if the code change should be adjusted and the tests found a real regression.
 - If a task requires new features or significant changes, add new tests alongside the feature change if the scenario is not covered by existing changes.
 
 ## Validation workflow
