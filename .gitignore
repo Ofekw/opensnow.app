@@ -3,4 +3,7 @@ dist/
 *.local
 .env
 .env.*
-tsconfig.tsbuildinfo
+screenshots/
+*.tsbuildinfo
+package-lock.json
+bun.lockb

@@ -9,6 +9,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
+    "types": ["vite/client", "bun-types"],
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
@@ -22,5 +23,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "vite-env.d.ts"]
+  "include": ["src", "vite-env.d.ts"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"]
 }

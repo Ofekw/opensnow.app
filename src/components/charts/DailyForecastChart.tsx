@@ -89,6 +89,8 @@ export function DailyForecastChart({ daily }: Props) {
           <YAxis
             yAxisId="precip"
             orientation="left"
+            domain={[0, isImperial ? 12 : 30]}
+            ticks={isImperial ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [0, 5, 10, 15, 20, 25, 30]}
             tick={{ fill: '#94a3b8', fontSize: 12 }}
             axisLine={{ stroke: '#475569' }}
             label={{ value: precipLabel, angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11 }}
@@ -130,12 +132,12 @@ export function DailyForecastChart({ daily }: Props) {
             }}
           />
           <Legend wrapperStyle={{ fontSize: 12, color: '#94a3b8' }} />
-          <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={30} />
-          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (0-3 rating)" fill="#6366f1" maxBarSize={30} shape={RainDots} />
-          <Line yAxisId="temp" type="monotone" dataKey="high" name={`High ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} />
-          <Line yAxisId="temp" type="monotone" dataKey="low" name={`Low ${tempLabel}`} stroke="#3b82f6" strokeWidth={2} dot={false} />
-          <Line yAxisId="temp" type="monotone" dataKey="feelsHigh" name="Feels High" stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} />
-          <Line yAxisId="temp" type="monotone" dataKey="feelsLow" name="Feels Low" stroke="#3b82f6" strokeWidth={1} strokeDasharray="4 3" dot={false} />
+          <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={30} isAnimationActive={false} />
+          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (0-3 rating)" fill="#6366f1" maxBarSize={30} shape={RainDots} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="high" name={`High ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="low" name={`Low ${tempLabel}`} stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="feelsHigh" name="Feels High" stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="feelsLow" name="Feels Low" stroke="#3b82f6" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

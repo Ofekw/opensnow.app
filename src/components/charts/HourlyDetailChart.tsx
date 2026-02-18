@@ -89,6 +89,8 @@ export function HourlyDetailChart({ hourly }: Props) {
           <YAxis
             yAxisId="precip"
             orientation="left"
+            domain={[0, isImperial ? 1 : 2.5]}
+            ticks={isImperial ? [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] : [0, 0.5, 1.0, 1.5, 2.0, 2.5]}
             tick={{ fill: '#94a3b8', fontSize: 11 }}
             axisLine={{ stroke: '#475569' }}
           />
@@ -121,10 +123,10 @@ export function HourlyDetailChart({ hourly }: Props) {
             }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[3, 3, 0, 0]} />
-          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (0-3 rating)" fill="#6366f1" shape={RainDots} />
-          <Line yAxisId="temp" type="monotone" dataKey="temp" name={`Temp ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} />
-          <Line yAxisId="temp" type="monotone" dataKey="feels" name={`Feels ${tempLabel}`} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} />
+          <Bar yAxisId="precip" dataKey="snow" name={`Snow (${precipLabel})`} fill="#38bdf8" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+          <Bar yAxisId="precip" dataKey="rainDots" name="Rain (0-3 rating)" fill="#6366f1" shape={RainDots} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="temp" name={`Temp ${tempLabel}`} stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line yAxisId="temp" type="monotone" dataKey="feels" name={`Feels ${tempLabel}`} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
