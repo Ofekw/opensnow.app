@@ -62,7 +62,9 @@ export function recalcHourly(
 
   // Station is well above the freezing level → all precip is snow
   if (stationElevation > freezingLevelHeight + 100) {
-    const slr = snowLiquidRatio(temperature);
+    // Clamp temperature to ≤0°C for SLR to ensure precipitation is conserved
+    // (if temp > 0, we'd get SLR=0 which would drop all precip)
+    const slr = snowLiquidRatio(Math.min(temperature, 0));
     return {
       snowfall: +(precipitation * slr).toFixed(2),
       rain: 0,

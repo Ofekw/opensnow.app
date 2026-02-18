@@ -65,6 +65,18 @@ describe('recalcHourly', () => {
     expect(result.rain).toBe(0);
   });
 
+  it('conserves precipitation when station is above freezing level with warm temp', () => {
+    // Station at 1800m, freezing level at 500m, but temp is 5°C
+    // Without clamping, SLR would be 0 and precip would be lost
+    // With clamping to 0°C, SLR is 1.0 (10:1 ratio)
+    const result = recalcHourly(
+      { precipitation: 2.0, rain: 2.0, snowfall: 0, temperature: 5, freezingLevelHeight: 500 },
+      1800,
+    );
+    expect(result.snowfall).toBe(2.0);  // 2.0mm * 1.0 SLR (temp clamped to 0°C)
+    expect(result.rain).toBe(0);
+  });
+
   it('eliminates rain at sub-freezing temperatures near freezing level', () => {
     // Station at 600m, freezing level at 620m, temp -1°C → SLR 1.0
     const result = recalcHourly(
