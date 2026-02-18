@@ -343,8 +343,58 @@ src/
 
 - **Bun PATH**: Must add `$env:PATH = "$env:USERPROFILE\.bun\bin;$env:PATH"` each PowerShell session
 - **Open-Meteo archive lag**: ~5 days behind. Use forecast endpoint's `past_days` for recent history.
+- **Open-Meteo elevation limitation**: The `elevation` parameter only adjusts temperature via lapse rate. Precipitation data comes from the same grid cell (~11km resolution) regardless of elevation. Our snowRecalc layer fixes this.
 - **Timezone handling**: All API calls pass the user's selected IANA timezone. All display formatting uses `Intl.DateTimeFormat` with that timezone.
 - **PWA caching**: StaleWhileRevalidate via Workbox — serves cached response immediately, refreshes in background.
+
+---
+
+## Phase 13: Snowfall Recalculation & Data Accuracy Fix
+
+### What changed
+- Created `src/utils/snowRecalc.ts` — temperature-dependent snow-liquid ratio (SLR) recalculation that replaces Open-Meteo's fixed ~7:1 ratio with realistic mountain ratios (10:1 to 20:1 depending on temperature).
+- Modified `src/data/openmeteo.ts` to apply recalculation at the data layer: hourly snowfall/rain are recomputed from total precipitation using freezing level + station elevation + temperature, then daily sums are recomputed from corrected hourly data.
+- Fixed `src/pages/ResortPage.tsx` — Recent Snowfall section now uses the user's selected elevation band instead of always hardcoding 'mid'.
+- Added `src/utils/__tests__/snowRecalc.test.ts` — 15 unit tests covering SLR, recalculation at various temperatures, and a Crystal Mountain validation scenario.
+
+### Why it changed
+Three interrelated data accuracy issues were identified:
+1. **Underestimated snowfall**: Open-Meteo uses a fixed ~7:1 SLR, but real mountain snow at -7°C to -13°C has 12:1–20:1 ratios. Crystal Mountain mid showed 1.4cm when competitors showed 4–5cm.
+2. **Base showing more snow than mid**: The `elevation` parameter only adjusts temperature, not precipitation. The model's rain/snow split at the grid cell level could produce more snow at base than mid due to temperature interpolation artifacts.
+3. **Rain at sub-freezing temperatures**: The API's rain/snow split is computed at grid-cell elevation, not station elevation. Our recalculation uses the station's actual elevation vs freezing level to correctly categorize precipitation.
+
+### How the recalculation works
+- For each hourly data point, precipitation is re-split into snow/rain based on:
+  - If station is >100m above freezing level → all snow
+  - If temp ≤ 0°C → all snow  
+  - If 0–2°C → linear mix
+  - If > 2°C → all rain
+- Snow depth is computed as `precipitation_mm × SLR` where SLR varies by temperature:
+  - 0 to -2°C: 1.0 (10:1)
+  - -2 to -5°C: 1.2 (12:1)
+  - -5 to -10°C: 1.5 (15:1)
+  - -10 to -15°C: 1.8 (18:1)
+  - Below -15°C: 2.0 (20:1)
+- Daily sums are recomputed from corrected hourly values
+
+### Validation
+For Crystal Mountain mid (1800m), Feb 18 2026:
+- **Before**: 1.4cm (Open-Meteo raw)
+- **After**: ~4.0cm (recalculated)
+- **Competitors**: snow-forecast.com ~4cm, OpenSnow ~5cm
+
+Higher elevations now correctly show ≥ snowfall of lower elevations because:
+- Same precipitation amount × higher SLR at colder temperature = more snow
+
+### Key files affected
+- `src/utils/snowRecalc.ts` (new)
+- `src/utils/__tests__/snowRecalc.test.ts` (new)
+- `src/data/openmeteo.ts` (mapHourly/mapDaily now apply recalculation)
+- `src/pages/ResortPage.tsx` (Recent Snow uses selected band)
+
+### Follow-up notes
+- The historical archive endpoint (`fetchHistorical`) still uses raw API snowfall since it doesn't return hourly data. A future improvement could add temperature-based correction for historical data too.
+- Alternative free APIs (Weather.gov, multi-model averaging) were investigated but not implemented — the recalculation approach provides accurate results without additional API calls.
 
 ## Status vs Plan
 
@@ -372,6 +422,7 @@ src/
 | GitHub repo link + feedback button | ✅ Complete |
 | Comprehensive UI unit tests | ✅ Complete |
 | PR screenshot generation | ✅ Complete |
+| Snowfall recalculation (accuracy fix) | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |
