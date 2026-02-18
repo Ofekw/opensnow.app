@@ -13,7 +13,7 @@ describe('snowLiquidRatio', () => {
     expect(snowLiquidRatio(3)).toBe(0);
   });
 
-  it('returns 0.5 for 0–2°C (wet mix)', () => {
+  it('returns 0.5 for >0 to 2°C (wet mix)', () => {
     expect(snowLiquidRatio(1)).toBe(0.5);
     expect(snowLiquidRatio(0.5)).toBe(0.5);
   });
