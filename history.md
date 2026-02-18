@@ -396,6 +396,21 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 - The historical archive endpoint (`fetchHistorical`) still uses raw API snowfall since it doesn't return hourly data. A future improvement could add temperature-based correction for historical data too.
 - Alternative free APIs (Weather.gov, multi-model averaging) were investigated but not implemented — the recalculation approach provides accurate results without additional API calls.
 
+## Phase 13b: Rain Unit Fix in Metric Charts
+
+### What changed
+- Fixed rain unit mismatch in `DailyForecastChart` and `HourlyDetailChart`: rain values (stored in mm from the API) were displayed raw but labeled as "cm" in metric mode.
+- Rain is now converted from mm → cm (`/ 10`) in metric mode to match snow on the shared precipitation Y-axis.
+- Imperial mode was already correct (mm → in via `/ 25.4`).
+
+### Why it changed
+- Rain and snow share a Y-axis labeled "(cm)" in metric mode, but rain data was plotted in mm. This made rain values appear ~10x larger than they should on the cm scale (e.g., 0.65mm displayed as "0.7 cm" instead of "0.065 cm").
+- Discovered while validating snowfall recalculation against live API data for Crystal Mountain WA.
+
+### Key files affected
+- `src/components/charts/DailyForecastChart.tsx`
+- `src/components/charts/HourlyDetailChart.tsx`
+
 ## Status vs Plan
 
 | Feature | Status |
