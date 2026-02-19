@@ -1,4 +1,4 @@
-# FreeSnow — Implementation History
+# Free OpenSnow — Implementation History
 
 A chronological log of all implementation work, decisions, and changes made during the build of FreeSnow.
 
@@ -525,6 +525,42 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 - `src/components/ConditionsSummary.css` — Entrance animation
 - `src/components/charts/BaseChart.tsx` — `echarts.connect()` for cross-chart sync
 
+## Snow Data Accuracy Improvement — Multi-Model, SLR, NWS, Snow Depth
+
+### What changed
+- **Phase A: Multi-model averaging** — The primary forecast now fetches 3 weather models in parallel (GFS, ECMWF IFS, and HRRR for US / GEM for Canada) and averages their raw output before applying the SLR recalculation. Precipitation uses **median** (robust to outlier model spikes), temperature/wind/humidity use **mean**, weather codes use **mode**, and wind direction uses vector averaging. Different time ranges are handled via union (HRRR 48h contributes only to short-range, GFS/ECMWF cover full 7 days). Falls back to single `best_match` if all model fetches fail.
+- **Phase B: Improved SLR** — `snowLiquidRatio()` now accepts optional `relativeHumidity` and `windSpeedKmh` parameters. High humidity (≥80%) boosts SLR by 10-15% (fluffier dendritic crystals), low humidity (<50%) reduces by 10% (denser granular snow). Strong wind (≥30 km/h) reduces by 10-20% (compaction + sublimation). `recalcHourly` passes humidity and wind from the API data.
+- **Phase C: NWS cross-reference** — For US resorts, `fetchNWSSnowfall()` queries the NWS Weather.gov API (free, no key, CORS) via a 2-step lookup (points → gridpoint forecastGridData → snowfallAmount). NWS forecaster-adjusted snowfall is blended with multi-model output at 30% NWS / 70% model weight. NWS failures are silently ignored (optional enhancement).
+- **Phase D: Snow depth** — Added `snow_depth` to hourly API variables. `HourlyMetrics` now includes optional `snowDepth` field. Model averaging handles `snow_depth` arrays when present.
+- **Service worker** — Added `StaleWhileRevalidate` caching for `api.weather.gov` origin.
+
+### Why it changed
+The plan identified four independent accuracy improvements, all achievable with free APIs and no backend:
+1. Multi-model averaging is the single highest-impact technique for forecast accuracy (15-30% RMSE reduction).
+2. Humidity and wind are already fetched but weren't used in SLR — adding them corrects the fluffiness/compaction mismatch.
+3. NWS forecasters manually adjust QPF and snow ratios — their signal adds human intelligence to the pipeline.
+4. Snow depth provides validation data and future UI opportunities.
+
+### Key files affected
+- `src/utils/modelAverage.ts` — NEW: `mean`, `median`, `averageHourlyArrays`, `averageDailyArrays`, `blendWithNWS`, `modelsForCountry`
+- `src/utils/__tests__/modelAverage.test.ts` — NEW: 22 tests
+- `src/data/nws.ts` — NEW: `fetchNWSGridpoint`, `fetchNWSSnowfall`, `nwsToSnowMap`
+- `src/data/__tests__/nws.test.ts` — NEW: 3 tests
+- `src/utils/snowRecalc.ts` — `snowLiquidRatio` upgraded with humidity + wind; `RecalcHourlyInput` extended
+- `src/utils/__tests__/snowRecalc.test.ts` — 13 new tests for humidity/wind/combined SLR + recalcHourly with inputs
+- `src/data/openmeteo.ts` — `OMForecastResponse` exported; `snow_depth` added to hourly vars/types; `mapHourly` passes humidity/wind to `recalcHourly`; `fetchMultiModelForecast` added
+- `src/hooks/useWeather.ts` — `useForecast` now uses multi-model + NWS blending pipeline
+- `src/types.ts` — `HourlyMetrics.snowDepth` added (optional)
+- `src/sw.ts` — NWS API caching route added
+
+### API call budget
+- Previous: 3 calls/resort (3 bands × 1 model)
+- Now: 9 calls/resort for Open-Meteo (3 bands × 3 models) + 2 for NWS (US only) = 11 max
+- Well within 10,000/day free tier (≥900 resort views/day)
+
+### Test impact
+- 215 tests across 21 files (up from ~177), all passing
+
 ## Status vs Plan
 
 | Feature | Status |
@@ -552,7 +588,10 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 | Comprehensive UI unit tests | ✅ Complete |
 | PR screenshot generation | ✅ Complete |
 | Snowfall recalculation (accuracy fix) | ✅ Complete |
-| UI/UX Phase 1 — Design system + ECharts | ✅ Complete |
+| Multi-model averaging (accuracy improvement) | ✅ Complete |
+| Improved SLR (humidity + wind) | ✅ Complete |
+| NWS cross-reference (US resorts) | ✅ Complete |
+| Snow depth variable | ✅ Complete |
 | UI/UX Phase 2 — Snow Timeline + Conditions + Resort restructure | ✅ Complete |
 | UI/UX Phase 4 — Polish + Animations | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |

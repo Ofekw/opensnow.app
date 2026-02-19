@@ -1,5 +1,5 @@
 /**
- * BaseChart — Thin wrapper around ReactECharts applying the FreeSnow theme.
+ * BaseChart — Thin wrapper around ReactECharts applying the Free OpenSnow theme.
  *
  * Handles: theme registration, responsive resize, loading skeleton,
  * and consistent container styling across all charts.

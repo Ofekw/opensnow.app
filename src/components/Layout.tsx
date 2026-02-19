@@ -137,22 +137,19 @@ export function Layout() {
         <div className="container footer__inner">
           <p>
             Weather data by{' '}
-            <a
-              href="https://open-meteo.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open-Meteo
-            </a>{' '}
-            (CC BY 4.0). FreeSnow is{' '}
-            <a
-              href="https://github.com/Ofekw/freesnow"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              open-source
-            </a>{' '}
-            &amp; non-commercial.
+            <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+            {' '}(CC BY 4.0) — models:{' '}
+            <a href="https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast" target="_blank" rel="noopener noreferrer">GFS</a>,{' '}
+            <a href="https://www.ecmwf.int/en/forecasts/datasets/open-data" target="_blank" rel="noopener noreferrer">ECMWF</a>,{' '}
+            <a href="https://rapidrefresh.noaa.gov/hrrr/" target="_blank" rel="noopener noreferrer">HRRR</a>,{' '}
+            <a href="https://weather.gc.ca/grib/grib2_glb_25km_e.html" target="_blank" rel="noopener noreferrer">GEM</a>.
+            {' '}US snowfall cross-referenced with{' '}
+            <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener noreferrer">NWS Weather.gov</a>.
+          </p>
+          <p>
+            Free OpenSnow is{' '}
+            <a href="https://github.com/Ofekw/freesnow" target="_blank" rel="noopener noreferrer">open-source</a>
+            {' '}&amp; non-commercial.
           </p>
           <a
             className="footer__feedback"
