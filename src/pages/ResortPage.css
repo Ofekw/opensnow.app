@@ -8,8 +8,14 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-md);
-  padding-right: 260px;
+  padding-right: 180px;
   animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.resort-page__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .resort-page__back {
@@ -36,11 +42,13 @@
 }
 
 .resort-page__fav {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: var(--color-text-muted);
   transition: color 0.2s, transform 0.2s;
   flex-shrink: 0;
-  margin-top: var(--space-sm);
+  display: flex;
+  align-items: center;
+  line-height: 1;
 }
 .resort-page__fav:hover {
   transform: scale(1.2);
@@ -96,6 +104,9 @@
 }
 
 .resort-page__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: var(--space-xs) var(--space-md);
   background: var(--color-surface);
   border: 1px solid var(--color-surface-alt);
@@ -189,6 +200,9 @@
   white-space: nowrap;
 }
 .day-card__snow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--color-accent);
@@ -233,6 +247,9 @@
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.05rem;
   font-weight: 700;
   margin-bottom: var(--space-md);
@@ -240,11 +257,30 @@
   border-left: 3px solid var(--color-accent);
 }
 
+.section-title__icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
 .section-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--space-sm);
+}
+
+/* Snowpack stat highlight */
+.stat--snowpack .stat__value {
+  color: var(--chart-snow);
+}
+
+.stat--snowpack .stat__label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 /* Conditions 2-column grid */
@@ -259,6 +295,9 @@
 }
 
 .resort-page__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-top: var(--space-md);
   color: var(--color-danger);
   background: rgba(239, 68, 68, 0.1);
@@ -294,7 +333,7 @@
 
 @media (max-width: 640px) {
   .resort-page__header {
-    padding-right: 210px;
+    padding-right: 140px;
   }
   .resort-page__name {
     font-size: 1.3rem;

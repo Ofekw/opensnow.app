@@ -35,6 +35,8 @@
   transition: color 0.15s, transform 0.15s;
   line-height: 1;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 .resort-card__fav:hover {
   transform: scale(1.15);

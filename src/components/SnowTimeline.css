@@ -57,11 +57,14 @@
   align-items: flex-end;
   gap: 0;
   min-height: 100px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .snow-timeline__section {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   gap: 2px;
   align-items: flex-end;
 }
@@ -163,7 +166,7 @@
   }
 
   .snow-timeline__bar-col {
-    min-width: 24px;
+    min-width: 28px;
   }
 
   .snow-timeline__bar-track {
@@ -176,5 +179,13 @@
 
   .snow-timeline__totals {
     gap: var(--space-lg);
+  }
+
+  .snow-timeline__bar-value {
+    font-size: 0.58rem;
+  }
+
+  .snow-timeline__bar-label {
+    font-size: 0.58rem;
   }
 }

@@ -6,8 +6,10 @@
  * all three elevation bands for an at-a-glance comparison.
  */
 import type { BandForecast, DailyMetrics, HourlyMetrics } from '@/types';
+import { Snowflake, CloudRain, Wind, Droplets, Thermometer, Layers } from 'lucide-react';
+import { WeatherIcon } from '@/components/icons';
 import { useUnits } from '@/context/UnitsContext';
-import { weatherDescription, fmtTemp, fmtElevation, fmtSnow } from '@/utils/weather';
+import { weatherDescription, fmtTemp, fmtElevation, fmtSnow, cmToIn } from '@/utils/weather';
 import './ConditionsSummary.css';
 
 interface Props {
@@ -92,7 +94,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
               <div key={row.label} className="conditions-summary__cell" role="cell">
                 {desc ? (
                   <span className="conditions-summary__weather">
-                    <span className="conditions-summary__icon">{desc.icon}</span>
+                    <span className="conditions-summary__icon"><WeatherIcon name={desc.icon} size={20} /></span>
                     <span className="conditions-summary__weather-label">{desc.label}</span>
                   </span>
                 ) : '—'}
@@ -122,7 +124,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
         {/* Snow row */}
         <div className="conditions-summary__row conditions-summary__row--highlight" role="row">
           <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-            ❄️ Snow
+            <Snowflake size={14} className="label-icon" /> Snow
           </div>
           {bandRows.map((row) => (
             <div key={row.label} className="conditions-summary__cell" role="cell">
@@ -138,7 +140,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
         {/* Rain row */}
         <div className="conditions-summary__row" role="row">
           <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-            🌧️ Rain
+            <CloudRain size={14} className="label-icon" /> Rain
           </div>
           {bandRows.map((row) => (
             <div key={row.label} className="conditions-summary__cell" role="cell">
@@ -154,7 +156,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
         {/* Wind row */}
         <div className="conditions-summary__row" role="row">
           <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-            💨 Wind
+            <Wind size={14} className="label-icon" /> Wind
           </div>
           {bandRows.map((row) => (
             <div key={row.label} className="conditions-summary__cell" role="cell">
@@ -173,7 +175,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
         {/* Precip probability row */}
         <div className="conditions-summary__row" role="row">
           <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-            ☔ Precip %
+            <Droplets size={14} className="label-icon" /> Precip %
           </div>
           {bandRows.map((row) => (
             <div key={row.label} className="conditions-summary__cell" role="cell">
@@ -190,13 +192,37 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
         {avgFreezing !== null && (
           <div className="conditions-summary__row" role="row">
             <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-              🧊 Freeze lvl
+              <Thermometer size={14} className="label-icon" /> Freeze lvl
             </div>
             <div className="conditions-summary__cell conditions-summary__cell--full" role="cell" style={{ gridColumn: 'span 3' }}>
               <span className="conditions-summary__freezing">
                 ~{fmtElevation(avgFreezing, elev)}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Snowpack depth row */}
+        {bandRows.some((r) => r.hourly.some((h) => h.snowDepth != null && h.snowDepth > 0)) && (
+          <div className="conditions-summary__row" role="row">
+            <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
+              <Layers size={14} className="label-icon" /> Snowpack
+            </div>
+            {bandRows.map((row) => {
+              const depths = row.hourly.filter((h) => h.snowDepth != null).map((h) => h.snowDepth!);
+              const maxDepthCm = depths.length > 0 ? Math.max(...depths) * 100 : null;
+              return (
+                <div key={row.label} className="conditions-summary__cell" role="cell">
+                  {maxDepthCm != null && maxDepthCm > 0 ? (
+                    <span className="conditions-summary__snowpack">
+                      {snow === 'in'
+                        ? `${Math.round(cmToIn(maxDepthCm))}"`
+                        : `${Math.round(maxDepthCm)}cm`}
+                    </span>
+                  ) : '—'}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

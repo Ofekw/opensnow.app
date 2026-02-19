@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Star } from 'lucide-react';
+import { WeatherIcon } from '@/components/icons';
 import type { Resort, DailyMetrics } from '@/types';
 import { fetchForecast } from '@/data/openmeteo';
 import { weatherDescription, fmtTemp, fmtSnow, fmtElevation } from '@/utils/weather';
@@ -97,7 +99,7 @@ export function FavoriteCard({ resort, onToggleFavorite }: Props) {
           aria-label="Remove from favorites"
           title="Remove from favorites"
         >
-          ★
+          <Star size={18} fill="currentColor" />
         </button>
       </div>
 
@@ -125,7 +127,7 @@ export function FavoriteCard({ resort, onToggleFavorite }: Props) {
             <div className="fav-card__tomorrow">
               <span className="fav-card__tomorrow-label">Tomorrow</span>
               <span className="fav-card__tomorrow-weather">
-                {tomorrowDesc.icon} {tomorrowDesc.label}
+                <WeatherIcon name={tomorrowDesc.icon} size={16} /> {tomorrowDesc.label}
               </span>
               <span className="fav-card__tomorrow-temps">
                 {fmtTemp(summary.tomorrow.temperatureMin, temp)} / {fmtTemp(summary.tomorrow.temperatureMax, temp)}

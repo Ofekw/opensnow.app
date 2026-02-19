@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import {
+  Snowflake, BarChart3, Clock, Sun, Thermometer,
+  TrendingUp, AlertTriangle, RefreshCw, Star, Layers,
+} from 'lucide-react';
+import { WeatherIcon } from '@/components/icons';
 import { getResortBySlug } from '@/data/resorts';
 import { useForecast } from '@/hooks/useWeather';
 import { fetchForecast } from '@/data/openmeteo';
@@ -13,7 +18,7 @@ import { HourlySnowChart } from '@/components/charts/HourlySnowChart';
 import { RecentSnowChart } from '@/components/charts/RecentSnowChart';
 import { FreezingLevelChart } from '@/components/charts/FreezingLevelChart';
 import { UVIndexChart } from '@/components/charts/UVIndexChart';
-import { weatherDescription, fmtTemp, fmtElevation, fmtSnow } from '@/utils/weather';
+import { weatherDescription, fmtTemp, fmtElevation, fmtSnow, cmToIn } from '@/utils/weather';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import type { ElevationBand, BandForecast, DailyMetrics } from '@/types';
@@ -61,6 +66,16 @@ export function ResortPage() {
     return bandData.hourly.filter((h) => h.time.startsWith(selectedDay.date));
   }, [bandData, selectedDay]);
 
+  // Compute snowpack depth (max snow depth for today from selected band)
+  const snowpackDepthCm = useMemo(() => {
+    if (!bandData?.daily[0]) return null;
+    const todayDate = bandData.daily[0].date;
+    const todayHourly = bandData.hourly.filter((h) => h.time.startsWith(todayDate));
+    const depths = todayHourly.filter((h) => h.snowDepth != null).map((h) => h.snowDepth!);
+    if (!depths.length) return null;
+    return Math.max(...depths) * 100; // m → cm
+  }, [bandData]);
+
   if (!resort) {
     return (
       <div className="resort-page__empty">
@@ -85,7 +100,16 @@ export function ResortPage() {
       <header className="resort-page__header">
         <div>
           <Link to="/" className="resort-page__back">← All Resorts</Link>
-          <h1 className="resort-page__name">{resort.name}</h1>
+          <div className="resort-page__title-row">
+            <h1 className="resort-page__name">{resort.name}</h1>
+            <button
+              className={`resort-page__fav ${isFav(resort.slug) ? 'active' : ''}`}
+              onClick={() => toggleFav(resort.slug)}
+              aria-label={isFav(resort.slug) ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star size={24} fill={isFav(resort.slug) ? 'currentColor' : 'none'} />
+            </button>
+          </div>
           <p className="resort-page__region">
             {resort.region}, {resort.country}
             {resort.website && (
@@ -98,13 +122,6 @@ export function ResortPage() {
             )}
           </p>
         </div>
-        <button
-          className={`resort-page__fav ${isFav(resort.slug) ? 'active' : ''}`}
-          onClick={() => toggleFav(resort.slug)}
-          aria-label={isFav(resort.slug) ? 'Remove from favorites' : 'Add to favorites'}
-        >
-          {isFav(resort.slug) ? '★' : '☆'}
-        </button>
       </header>
 
       {/* Quick stats */}
@@ -137,12 +154,22 @@ export function ResortPage() {
             <span className="stat__value">{resort.acres.toLocaleString()}</span>
           </div>
         )}
+        {snowpackDepthCm != null && snowpackDepthCm > 0 && (
+          <div className="stat stat--snowpack">
+            <span className="stat__label"><Layers size={12} /> Snowpack</span>
+            <span className="stat__value">
+              {snow === 'in'
+                ? `${Math.round(cmToIn(snowpackDepthCm))}"`
+                : `${Math.round(snowpackDepthCm)}cm`}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* ─── SNOW TIMELINE (hero position) ─── */}
       {bandData && recentDays.length > 0 && (
         <section className="resort-page__section animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <h2 className="section-title">❄️ Snow Timeline</h2>
+          <h2 className="section-title"><Snowflake size={18} className="section-title__icon" /> Snow Timeline</h2>
           <SnowTimeline
             recentDays={recentDays}
             forecastDays={bandData.daily}
@@ -158,11 +185,11 @@ export function ResortPage() {
           elevations={resort.elevation}
         />
         <button className="resort-page__refresh" onClick={refetch} disabled={loading}>
-          {loading ? 'Loading…' : '↻ Refresh'}
+          {loading ? 'Loading…' : <><RefreshCw size={14} /> Refresh</>}
         </button>
       </div>
 
-      {error && <p className="resort-page__error">⚠️ {error}</p>}
+      {error && <p className="resort-page__error"><AlertTriangle size={14} /> {error}</p>}
 
       {loading && !forecast && (
         <div className="resort-page__loader-skeleton">
@@ -179,7 +206,7 @@ export function ResortPage() {
           <section className="resort-page__section animate-fade-in-up">
             <div className="resort-page__section-header">
               <h2 className="section-title">
-                📊 Conditions — {selectedDayLabel}
+                <BarChart3 size={18} className="section-title__icon" /> Conditions — {selectedDayLabel}
               </h2>
               <span className="resort-page__section-badge">All Elevations</span>
             </div>
@@ -198,7 +225,7 @@ export function ResortPage() {
           <section className="resort-page__snow-section animate-fade-in-up">
             <div className="resort-page__snow-section-header">
               <h2 className="section-title">
-                ❄️ 7-Day Snow — {band.toUpperCase()} ({fmtElevation(bandData.elevation, elev)})
+                <Snowflake size={18} className="section-title__icon" /> 7-Day Snow — {band.toUpperCase()} ({fmtElevation(bandData.elevation, elev)})
               </h2>
               {weekTotalSnow > 0 && (
                 <span className="resort-page__week-total">
@@ -223,13 +250,13 @@ export function ResortPage() {
                       {fmtDate(d.date + 'T12:00:00', { weekday: 'short' })}
                     </span>
                     <span className="day-card__icon" title={desc.label}>
-                      {desc.icon}
+                      <WeatherIcon name={desc.icon} size={24} />
                     </span>
                     <span className="day-card__temps">
                       {fmtTemp(d.temperatureMax, temp)} / {fmtTemp(d.temperatureMin, temp)}
                     </span>
                     <span className="day-card__snow">
-                      {d.snowfallSum > 0 ? `❄️ ${fmtSnow(d.snowfallSum, snow)}` : '—'}
+                      {d.snowfallSum > 0 ? <><Snowflake size={12} /> {fmtSnow(d.snowfallSum, snow)}</> : '—'}
                     </span>
                   </button>
                 );
@@ -253,19 +280,19 @@ export function ResortPage() {
 
           {/* ─── DETAILED CONDITIONS ─── */}
           <section className="resort-page__section animate-fade-in-up">
-            <h2 className="section-title">🔍 Hourly Detail — {selectedDayLabel}</h2>
+            <h2 className="section-title"><Clock size={18} className="section-title__icon" /> Hourly Detail — {selectedDayLabel}</h2>
             <HourlyDetailChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
           </section>
 
           {/* ─── UV + FREEZING LEVEL GRID ─── */}
           <div className="resort-page__conditions-grid animate-fade-in-up">
             <section className="resort-page__section resort-page__section--half">
-              <h3 className="section-subtitle">☀️ UV Index</h3>
+              <h3 className="section-subtitle"><Sun size={16} className="section-title__icon" /> UV Index</h3>
               <UVIndexChart daily={bandData.daily} />
             </section>
 
             <section className="resort-page__section resort-page__section--half">
-              <h3 className="section-subtitle">🧊 Freezing Level</h3>
+              <h3 className="section-subtitle"><Thermometer size={16} className="section-title__icon" /> Freezing Level</h3>
               <FreezingLevelChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} resortElevation={resort.elevation[band]} />
             </section>
           </div>
@@ -274,7 +301,7 @@ export function ResortPage() {
 
       {/* ─── RECENT SNOWFALL ─── */}
       <section className="resort-page__section">
-        <h2 className="section-title">📈 Recent Snowfall (past 14 days)</h2>
+        <h2 className="section-title"><TrendingUp size={18} className="section-title__icon" /> Recent Snowfall (past 14 days)</h2>
         {histLoading ? (
           <div className="resort-page__loader">Loading history…</div>
         ) : recentDays.length > 0 ? (

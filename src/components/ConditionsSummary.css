@@ -49,12 +49,18 @@
 /* Label column */
 .conditions-summary__cell--label {
   justify-content: flex-start !important;
+  gap: 4px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-align: left;
   white-space: nowrap;
   border-right: 1px solid var(--color-border);
+}
+
+.conditions-summary__cell--label .label-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
 }
 
 /* Band column header */
@@ -167,6 +173,13 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--chart-freezing);
+}
+
+.conditions-summary__snowpack {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--chart-snow);
 }
 
 /* Full-width cell (freezing level spans 3 columns) */

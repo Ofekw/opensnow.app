@@ -87,10 +87,14 @@ button {
   color: inherit;
 }
 
-img,
-svg {
+img {
   display: block;
   max-width: 100%;
+}
+
+/* Lucide icons default to inline-flex for proper alignment */
+svg {
+  flex-shrink: 0;
 }
 
 input,

@@ -16,6 +16,9 @@
 }
 
 .fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px 14px;
   border: 1px solid var(--color-surface-alt);
   border-radius: 999px;
@@ -198,6 +201,9 @@
   bottom: 24px;
   right: 24px;
   z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 50%;

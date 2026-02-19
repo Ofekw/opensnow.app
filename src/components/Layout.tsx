@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Globe, Bell, BellOff, ChevronUp } from 'lucide-react';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone, TZ_OPTIONS, getUtcOffset } from '@/context/TimezoneContext';
 import { useSnowAlerts } from '@/hooks/useSnowAlerts';
@@ -8,7 +9,7 @@ import './Layout.css';
 export function Layout() {
   const { units, toggle, temp, elev } = useUnits();
   const { tzRaw, tzLabel, setTz } = useTimezone();
-  const { statusIcon, statusTitle, toggleAlerts, isSupported, enabled, permission } = useSnowAlerts();
+  const { statusTitle, toggleAlerts, isSupported, enabled, permission } = useSnowAlerts();
   const [tzOpen, setTzOpen] = useState(false);
   const [tzSearch, setTzSearch] = useState('');
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -84,7 +85,9 @@ export function Layout() {
           title={statusTitle}
           disabled={!isSupported}
         >
-          {statusIcon}
+          {permission === 'denied' || (permission === 'granted' && !enabled)
+            ? <BellOff size={16} />
+            : <Bell size={16} />}
         </button>
 
         <div className="tz-picker" ref={tzRef}>
@@ -94,7 +97,7 @@ export function Layout() {
             aria-label="Change timezone"
             title="Change timezone"
           >
-            🌐 {tzLabel}
+            <Globe size={14} /> {tzLabel}
           </button>
           {tzOpen && (
             <div className="tz-picker__dropdown">
@@ -169,7 +172,7 @@ export function Layout() {
         aria-label="Scroll to top"
         title="Scroll to top"
       >
-        ↑
+        <ChevronUp size={20} />
       </button>
     </div>
   );

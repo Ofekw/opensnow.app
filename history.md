@@ -594,9 +594,70 @@ The plan identified four independent accuracy improvements, all achievable with 
 | Snow depth variable | ✅ Complete |
 | UI/UX Phase 2 — Snow Timeline + Conditions + Resort restructure | ✅ Complete |
 | UI/UX Phase 4 — Polish + Animations | ✅ Complete |
+| UI/UX Phase 5 — Icons, Snowpack, Mobile Fixes | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |
 | Webcam links | 🔲 Not started |
 | Backend (accounts, alerts) | 🔲 Not started |
 | Trail map overlays | 🔲 Not started |
+
+---
+
+## Phase 17: UI/UX Phase 5 — Icons, Snowpack, Mobile Fixes
+
+### What changed
+
+**1. Emoji → Lucide Icon Pack Migration**
+- Replaced all emoji usage across the app with [Lucide React](https://lucide.dev/) SVG icons for cross-platform consistency.
+- Created `src/components/icons.tsx` — `WeatherIcon` component mapping WMO weather icon IDs (e.g., `'sun'`, `'cloud-snow'`, `'snowflake'`) to Lucide SVG components.
+- Updated `src/utils/weather.ts` — `WMO_MAP` now returns icon ID strings (e.g., `'sun'` instead of `'☀️'`) for all 28 WMO weather codes.
+- All section titles, row labels, UI controls, and weather displays now render uniform SVG icons:
+  - Section titles: `<Snowflake>`, `<BarChart3>`, `<Clock>`, `<Sun>`, `<Thermometer>`, `<TrendingUp>`
+  - Conditions table labels: `<Snowflake>` Snow, `<CloudRain>` Rain, `<Wind>` Wind, `<Droplets>` Precip %, `<Thermometer>` Freeze lvl
+  - UI controls: `<Star>` favorites, `<Globe>` timezone, `<Bell>`/`<BellOff>` alerts, `<ChevronUp>` scroll-to-top, `<RefreshCw>` refresh, `<AlertTriangle>` errors, `<Layers>` snowpack
+- Updated global CSS: SVG elements no longer forced to `display: block`; FAB buttons use `display: inline-flex` for proper icon+text alignment.
+
+**2. Favourites Icon Placement Fix**
+- Moved the favourite star from a floating right-side position to inline with the resort name (`resort-page__title-row` flex row).
+- Star is now directly next to the resort name and never overlaps with the FAB control group.
+- Reduced header `padding-right` from 260px/210px to 180px/140px since the star no longer needs its own space.
+- Uses Lucide `<Star>` with `fill="currentColor"` for active state, `fill="none"` for inactive.
+
+**3. SnowTimeline Mobile Overflow Fix**
+- Added `overflow-x: auto` with `-webkit-overflow-scrolling: touch` to the chart container.
+- Changed section flex from `flex: 1` to `flex: 1 0 auto` so bars maintain minimum width and scroll instead of compressing.
+- Reduced bar label font sizes on mobile (0.58rem) for denser layout before scroll kicks in.
+
+**4. Snowpack / Snow Depth Information**
+- Added a "Snowpack" stat to the quick stats row (next to Lifts, Acres) showing the current estimated snow depth for the selected elevation band, with `<Layers>` icon. Displayed in imperial (inches) or metric (cm).
+- Added a "Snowpack" row to the ConditionsSummary table showing snow depth across all three elevation bands (Base/Mid/Top).
+- Snow depth is computed as the max `snowDepth` value from the hourly data for the selected day, converted from meters to cm.
+
+### Why it changed
+- Emojis render differently across platforms (Windows, macOS, Android, iOS) causing inconsistent UX. SVG icons from Lucide are pixel-identical everywhere.
+- The favourite star was awkwardly floating on the right side of the header, disconnected from the resort name, and could be covered by the fixed FAB buttons on narrow screens.
+- SnowTimeline's 14 bars overflowed on mobile screens (<375px) because bars had min-width constraints that exceeded viewport width.
+- Snow depth (snowpack) data was already fetched from the API but not displayed anywhere — powder hunters need to know base depth to assess conditions.
+
+### Key files affected
+- `src/components/icons.tsx` — NEW: WeatherIcon component
+- `src/utils/weather.ts` — WMO icon IDs changed from emojis to string identifiers
+- `src/components/Layout.tsx` — Lucide icons for globe, bell, chevron
+- `src/components/Layout.css` — FAB `display: inline-flex`
+- `src/pages/ResortPage.tsx` — All section icons, fav inline with name, snowpack stat
+- `src/pages/ResortPage.css` — Title-row flex, section-title flex+icon styles, snowpack stat
+- `src/pages/HomePage.tsx` — Lucide Snowflake + Star icons
+- `src/pages/HomePage.css` — Icon alignment styles
+- `src/components/ResortCard.tsx` — Lucide Star icon
+- `src/components/FavoriteCard.tsx` — Lucide Star + WeatherIcon
+- `src/components/ConditionsSummary.tsx` — All row label icons + snowpack depth row
+- `src/components/ConditionsSummary.css` — Label icon styling + snowpack cell
+- `src/components/SnowTimeline.css` — overflow-x: auto, responsive font sizes
+- `src/styles/index.css` — SVG display rule updated
+- `src/components/ResortCard.css` — Fav button flex alignment
+- `src/components/FavoriteCard.css` — Tomorrow weather icon flex, fav button flex
+- Test files updated: weather.test.ts, ConditionsSummary.test.tsx, ResortCard.test.tsx, HomePage.test.tsx, ResortPage.test.tsx
+
+### Test impact
+- 215 tests across 21 files, all passing (0 new tests needed — existing tests updated for icon string changes)

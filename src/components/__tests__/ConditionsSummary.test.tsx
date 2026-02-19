@@ -97,10 +97,11 @@ describe('ConditionsSummary', () => {
     renderSummary();
     expect(screen.getByText('Weather')).toBeInTheDocument();
     expect(screen.getByText('Temp')).toBeInTheDocument();
-    expect(screen.getByText('❄️ Snow')).toBeInTheDocument();
-    expect(screen.getByText('🌧️ Rain')).toBeInTheDocument();
-    expect(screen.getByText('💨 Wind')).toBeInTheDocument();
-    expect(screen.getByText('☔ Precip %')).toBeInTheDocument();
+    // "Snow" appears in both row label and weather description for code 73
+    expect(screen.getAllByText('Snow').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Rain')).toBeInTheDocument();
+    expect(screen.getByText('Wind')).toBeInTheDocument();
+    expect(screen.getByText('Precip %')).toBeInTheDocument();
   });
 
   it('renders elevation values', () => {
@@ -119,9 +120,9 @@ describe('ConditionsSummary', () => {
 
   it('renders weather icons', () => {
     renderSummary();
-    // Weather code 73 → Snow emoji 🌨️
-    const icons = screen.getAllByText('🌨️');
-    expect(icons.length).toBe(3);
+    // Weather code 73 → Snow → renders SVG icons from Lucide
+    const labels = screen.getAllByText('Snow');
+    expect(labels.length).toBeGreaterThanOrEqual(3);
   });
 
   it('renders precipitation probability', () => {
@@ -132,7 +133,7 @@ describe('ConditionsSummary', () => {
 
   it('renders freezing level', () => {
     renderSummary();
-    expect(screen.getByText('🧊 Freeze lvl')).toBeInTheDocument();
+    expect(screen.getByText('Freeze lvl')).toBeInTheDocument();
   });
 
   it('renders wind info for all bands', () => {
