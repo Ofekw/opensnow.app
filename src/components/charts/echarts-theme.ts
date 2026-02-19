@@ -1,8 +1,8 @@
 /**
- * FreeSnow ECharts Theme — Grafana-inspired dark dashboard theme
+ * Free OpenSnow ECharts Theme — Grafana-inspired dark dashboard theme
  *
  * Provides a registered ECharts theme + shared builder helpers for
- * consistent chart styling across all FreeSnow charts.
+ * consistent chart styling across all Free OpenSnow charts.
  */
 import * as echarts from 'echarts/core';
 
@@ -65,7 +65,7 @@ const AXIS_LINE = { lineStyle: { color: COLORS.axis } };
 const AXIS_TICK = { lineStyle: { color: COLORS.axis } };
 const SPLIT_LINE = { lineStyle: { color: COLORS.grid, type: 'dashed' as const } };
 
-/* ── Register FreeSnow Theme ───────────────────────────────── */
+/* ── Register Free OpenSnow Theme ───────────────────────────────── */
 
 echarts.registerTheme('freesnow', {
   color: [

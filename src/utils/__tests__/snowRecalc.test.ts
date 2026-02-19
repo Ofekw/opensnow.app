@@ -176,3 +176,106 @@ describe('recalcDailyFromHourly', () => {
     expect(result.rainSum).toBe(0);
   });
 });
+
+/* ── snowLiquidRatio with humidity & wind ──────── */
+
+describe('snowLiquidRatio with humidity correction', () => {
+  it('boosts SLR at very high humidity (≥90%)', () => {
+    const base = snowLiquidRatio(-7);       // 1.5 (no humidity)
+    const boosted = snowLiquidRatio(-7, 92); // +15%
+    expect(boosted).toBeGreaterThan(base);
+    expect(boosted).toBeCloseTo(1.5 * 1.15, 1);
+  });
+
+  it('boosts SLR at high humidity (80–89%)', () => {
+    const base = snowLiquidRatio(-7);
+    const boosted = snowLiquidRatio(-7, 85); // +10%
+    expect(boosted).toBeGreaterThan(base);
+    expect(boosted).toBeCloseTo(1.5 * 1.10, 1);
+  });
+
+  it('reduces SLR at very low humidity (<50%)', () => {
+    const base = snowLiquidRatio(-7);
+    const reduced = snowLiquidRatio(-7, 30); // −10%
+    expect(reduced).toBeLessThan(base);
+    expect(reduced).toBeCloseTo(1.5 * 0.90, 1);
+  });
+
+  it('no change at moderate humidity (50–79%)', () => {
+    const base = snowLiquidRatio(-7);
+    const same = snowLiquidRatio(-7, 65);
+    expect(same).toBe(base);
+  });
+});
+
+describe('snowLiquidRatio with wind correction', () => {
+  it('reduces SLR at very strong wind (≥50 km/h)', () => {
+    const base = snowLiquidRatio(-7);
+    const reduced = snowLiquidRatio(-7, undefined, 55); // −20%
+    expect(reduced).toBeLessThan(base);
+    expect(reduced).toBeCloseTo(1.5 * 0.80, 1);
+  });
+
+  it('reduces SLR at strong wind (30–49 km/h)', () => {
+    const base = snowLiquidRatio(-7);
+    const reduced = snowLiquidRatio(-7, undefined, 35); // −10%
+    expect(reduced).toBeLessThan(base);
+    expect(reduced).toBeCloseTo(1.5 * 0.90, 1);
+  });
+
+  it('no change at light wind (<30 km/h)', () => {
+    const base = snowLiquidRatio(-7);
+    const same = snowLiquidRatio(-7, undefined, 15);
+    expect(same).toBe(base);
+  });
+});
+
+describe('snowLiquidRatio with combined humidity + wind', () => {
+  it('high humidity + strong wind partially cancel out', () => {
+    // Base at -7°C: 1.5
+    // +15% humidity (90%+) = 1.725, then −10% wind (30-49) = 1.5525
+    const result = snowLiquidRatio(-7, 95, 35);
+    expect(result).toBeCloseTo(1.5 * 1.15 * 0.90, 1);
+  });
+
+  it('low humidity + strong wind compound the reduction', () => {
+    // Base at -7°C: 1.5
+    // −10% dry + −20% wind = 1.5 * 0.9 * 0.8 = 1.08
+    const result = snowLiquidRatio(-7, 30, 55);
+    expect(result).toBeCloseTo(1.5 * 0.90 * 0.80, 1);
+  });
+});
+
+describe('recalcHourly with humidity/wind inputs', () => {
+  it('passes humidity and wind to SLR calculation', () => {
+    // At -7°C, 90% RH, 10 km/h wind: SLR = 1.5 * 1.15 = 1.725
+    const result = recalcHourly(
+      {
+        precipitation: 1.0,
+        rain: 0,
+        snowfall: 0,
+        temperature: -7,
+        freezingLevelHeight: 500,
+        relativeHumidity: 90,
+        windSpeed: 10,
+      },
+      1800,
+    );
+    // 1.0mm * 1.725 ≈ 1.73 (rounding to 2 decimals: 1.5 * 1.15 = 1.725 → 1.73)
+    expect(result.snowfall).toBeCloseTo(1.73, 1);
+  });
+
+  it('works without humidity/wind (backward compatible)', () => {
+    const result = recalcHourly(
+      {
+        precipitation: 1.0,
+        rain: 0,
+        snowfall: 0,
+        temperature: -7,
+        freezingLevelHeight: 500,
+      },
+      1800,
+    );
+    expect(result.snowfall).toBe(1.5); // unchanged from Phase 13
+  });
+});

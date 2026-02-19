@@ -11,6 +11,8 @@ import type {
   HistoricalSnowDay,
 } from '@/types';
 import { recalcHourly, recalcDailyFromHourly } from '@/utils/snowRecalc';
+import { averageHourlyArrays, averageDailyArrays } from '@/utils/modelAverage';
+import type { RawHourly, RawDaily } from '@/utils/modelAverage';
 
 const BASE = 'https://api.open-meteo.com/v1';
 
@@ -43,6 +45,7 @@ const HOURLY_VARS = [
   'wind_direction_10m',
   'wind_gusts_10m',
   'freezing_level_height',
+  'snow_depth',
 ].join(',');
 
 const DAILY_VARS = [
@@ -60,7 +63,7 @@ const DAILY_VARS = [
   'wind_gusts_10m_max',
 ].join(',');
 
-interface OMForecastResponse {
+export interface OMForecastResponse {
   hourly: {
     time: string[];
     temperature_2m: number[];
@@ -75,6 +78,7 @@ interface OMForecastResponse {
     wind_direction_10m: number[];
     wind_gusts_10m: number[];
     freezing_level_height: number[];
+    snow_depth?: number[];
   };
   daily: {
     time: string[];
@@ -102,6 +106,8 @@ function mapHourly(raw: OMForecastResponse['hourly'], elevation: number): Hourly
         snowfall: raw.snowfall[i]!,
         temperature: raw.temperature_2m[i]!,
         freezingLevelHeight: raw.freezing_level_height[i]!,
+        relativeHumidity: raw.relative_humidity_2m[i],
+        windSpeed: raw.wind_speed_10m[i],
       },
       elevation,
     );
@@ -119,6 +125,7 @@ function mapHourly(raw: OMForecastResponse['hourly'], elevation: number): Hourly
       windDirection: raw.wind_direction_10m[i]!,
       windGusts: raw.wind_gusts_10m[i]!,
       freezingLevelHeight: raw.freezing_level_height[i]!,
+      snowDepth: raw.snow_depth?.[i],
     };
   });
 }
@@ -181,6 +188,75 @@ export async function fetchForecast(
     elevation,
     hourly,
     daily: mapDaily(data.daily, hourly),
+  };
+}
+
+/* ── Multi-Model Forecast ──────────────────────── */
+
+/**
+ * Fetch the same location from multiple Open-Meteo models in parallel,
+ * average their raw output, then run the SLR recalculation on the averaged
+ * data.  Falls back to a single `best_match` call if every model fails.
+ */
+export async function fetchMultiModelForecast(
+  lat: number,
+  lon: number,
+  elevation: number,
+  band: ElevationBand,
+  models: string[],
+  forecastDays: number = 7,
+  pastDays: number = 0,
+  timezone: string = 'auto',
+): Promise<BandForecast> {
+  // Fire all model fetches in parallel; collect successes
+  const results = await Promise.allSettled(
+    models.map((model) => {
+      const params: Record<string, string | number | boolean> = {
+        latitude: lat,
+        longitude: lon,
+        elevation,
+        hourly: HOURLY_VARS,
+        daily: DAILY_VARS,
+        timezone,
+        forecast_days: forecastDays,
+        models: model,
+      };
+      if (pastDays > 0) params.past_days = pastDays;
+      const url = `${BASE}/forecast?${qs(params)}`;
+      return fetchJSON<OMForecastResponse>(url);
+    }),
+  );
+
+  const successful = results
+    .filter((r): r is PromiseFulfilledResult<OMForecastResponse> => r.status === 'fulfilled')
+    .map((r) => r.value);
+
+  // If no model succeeded, fall back to the default best_match call
+  if (successful.length === 0) {
+    return fetchForecast(lat, lon, elevation, band, forecastDays, pastDays, timezone);
+  }
+
+  // If only one model returned data, just use it directly
+  if (successful.length === 1) {
+    const data = successful[0]!;
+    const hourly = mapHourly(data.hourly, elevation);
+    return { band, elevation, hourly, daily: mapDaily(data.daily, hourly) };
+  }
+
+  // Average raw hourly + daily across models, then apply recalc
+  const avgHourly = averageHourlyArrays(
+    successful.map((d) => d.hourly as RawHourly),
+  );
+  const avgDaily = averageDailyArrays(
+    successful.map((d) => d.daily as RawDaily),
+  );
+
+  const hourly = mapHourly(avgHourly as OMForecastResponse['hourly'], elevation);
+  return {
+    band,
+    elevation,
+    hourly,
+    daily: mapDaily(avgDaily as OMForecastResponse['daily'], hourly),
   };
 }
 
