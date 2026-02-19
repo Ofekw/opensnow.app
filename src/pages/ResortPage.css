@@ -8,6 +8,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-md);
+  animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .resort-page__back {
@@ -15,6 +16,10 @@
   color: var(--color-text-muted);
   display: inline-block;
   margin-bottom: var(--space-xs);
+  transition: color 0.15s;
+}
+.resort-page__back:hover {
+  color: var(--color-accent);
 }
 
 .resort-page__name {
@@ -32,15 +37,16 @@
 .resort-page__fav {
   font-size: 2rem;
   color: var(--color-text-muted);
-  transition: color 0.15s, transform 0.15s;
+  transition: color 0.2s, transform 0.2s;
   flex-shrink: 0;
   margin-top: var(--space-sm);
 }
 .resort-page__fav:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 .resort-page__fav.active {
   color: var(--color-warning);
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 
 /* Stats row */
@@ -59,6 +65,12 @@
   display: flex;
   flex-direction: column;
   min-width: 70px;
+  transition: background 0.15s;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+}
+.stat:hover {
+  background: var(--color-surface-alt);
 }
 .stat__label {
   font-size: 0.7rem;
@@ -120,6 +132,7 @@
   background: rgba(56, 189, 248, 0.1);
   padding: 2px var(--space-sm);
   border-radius: var(--radius-sm);
+  animation: snowPulse 3s ease-in-out infinite;
 }
 
 /* Interactive day cards */
@@ -143,17 +156,21 @@
   border: 2px solid transparent;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
   user-select: none;
+  animation: fadeInUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .day-card:hover {
   background: var(--color-surface-alt);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+.day-card:active {
+  transform: translateY(0) scale(0.97);
 }
 .day-card--selected {
   border-color: var(--color-accent);
   background: rgba(56, 189, 248, 0.08);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2), inset 0 0 0 1px rgba(56, 189, 248, 0.1);
 }
 
 .day-card__date {
@@ -213,6 +230,8 @@
   font-size: 1.05rem;
   font-weight: 700;
   margin-bottom: var(--space-md);
+  padding-left: var(--space-sm);
+  border-left: 3px solid var(--color-accent);
 }
 
 .section-subtitle {
@@ -239,12 +258,20 @@
   background: rgba(239, 68, 68, 0.1);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
+  animation: fadeIn 0.3s ease both;
 }
 
 .resort-page__loader {
   text-align: center;
   padding: var(--space-xl) 0;
   color: var(--color-text-muted);
+}
+
+.resort-page__loader-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--space-xl) 0;
 }
 
 .resort-page__muted {

@@ -6,6 +6,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
+import * as echarts from 'echarts/core';
 // Side-effect: registers the 'freesnow' theme on first import
 import './echarts-theme';
 
@@ -48,7 +49,10 @@ export function BaseChart({
           notMerge
           lazyUpdate
           onChartReady={(chart) => {
-            if (group) chart.group = group;
+            if (group) {
+              chart.group = group;
+              echarts.connect(group);
+            }
           }}
         />
       )}

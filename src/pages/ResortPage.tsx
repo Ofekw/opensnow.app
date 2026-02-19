@@ -108,7 +108,7 @@ export function ResortPage() {
       </header>
 
       {/* Quick stats */}
-      <section className="resort-page__stats">
+      <section className="resort-page__stats animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <div className="stat">
           <span className="stat__label">Base</span>
           <span className="stat__value">{fmtElevation(resort.elevation.base, elev)}</span>
@@ -141,7 +141,7 @@ export function ResortPage() {
 
       {/* ─── SNOW TIMELINE (hero position) ─── */}
       {bandData && recentDays.length > 0 && (
-        <section className="resort-page__section">
+        <section className="resort-page__section animate-fade-in-up" style={{ animationDelay: '200ms' }}>
           <h2 className="section-title">❄️ Snow Timeline</h2>
           <SnowTimeline
             recentDays={recentDays}
@@ -165,13 +165,18 @@ export function ResortPage() {
       {error && <p className="resort-page__error">⚠️ {error}</p>}
 
       {loading && !forecast && (
-        <div className="resort-page__loader">Loading forecast…</div>
+        <div className="resort-page__loader-skeleton">
+          <div className="skeleton skeleton--chart" />
+          <div className="skeleton skeleton--text" style={{ width: '40%', marginTop: 'var(--space-md)' }} />
+          <div className="skeleton skeleton--text" style={{ width: '70%', marginTop: 'var(--space-sm)' }} />
+          <div className="skeleton skeleton--text" style={{ width: '55%', marginTop: 'var(--space-sm)' }} />
+        </div>
       )}
 
       {bandData && forecast && (
         <>
           {/* ─── CONDITIONS AT A GLANCE ─── */}
-          <section className="resort-page__section">
+          <section className="resort-page__section animate-fade-in-up">
             <div className="resort-page__section-header">
               <h2 className="section-title">
                 📊 Conditions — {selectedDayLabel}
@@ -190,7 +195,7 @@ export function ResortPage() {
           </section>
 
           {/* ─── SNOWFALL SECTION ─── */}
-          <section className="resort-page__snow-section">
+          <section className="resort-page__snow-section animate-fade-in-up">
             <div className="resort-page__snow-section-header">
               <h2 className="section-title">
                 ❄️ 7-Day Snow — {band.toUpperCase()} ({fmtElevation(bandData.elevation, elev)})
@@ -203,7 +208,7 @@ export function ResortPage() {
             </div>
 
             {/* Interactive day cards */}
-            <div className="daily-cards">
+            <div className="daily-cards stagger-children">
               {bandData.daily.map((d, i) => {
                 const desc = weatherDescription(d.weatherCode);
                 const isSelected = i === selectedDayIdx;
@@ -247,13 +252,13 @@ export function ResortPage() {
           </section>
 
           {/* ─── DETAILED CONDITIONS ─── */}
-          <section className="resort-page__section">
+          <section className="resort-page__section animate-fade-in-up">
             <h2 className="section-title">🔍 Hourly Detail — {selectedDayLabel}</h2>
             <HourlyDetailChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
           </section>
 
           {/* ─── UV + FREEZING LEVEL GRID ─── */}
-          <div className="resort-page__conditions-grid">
+          <div className="resort-page__conditions-grid animate-fade-in-up">
             <section className="resort-page__section resort-page__section--half">
               <h3 className="section-subtitle">☀️ UV Index</h3>
               <UVIndexChart daily={bandData.daily} />

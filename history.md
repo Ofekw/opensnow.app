@@ -485,6 +485,46 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 - `src/pages/ResortPage.tsx` — restructured layout + new component integration
 - `src/pages/ResortPage.css` — section header badge, stat font-mono, border updates
 
+---
+
+## Phase 16: UI/UX Overhaul — Phase 4 (Polish + Animations)
+
+### What changed
+- **Global animation system** — Added 6 `@keyframes` to `index.css`: `fadeInUp`, `fadeIn`, `slideInLeft`, `shimmer`, `pulseGlow`, `snowPulse`. Utility classes `.animate-fade-in-up`, `.animate-fade-in`, `.stagger-children` (10-step delay). Smooth scroll via `html { scroll-behavior: smooth }`. Full `prefers-reduced-motion: reduce` media query disables all animations/transitions for accessibility.
+- **Skeleton loading states** — Replaced plain "Loading forecast…" text with shimmer skeleton placeholders (`.skeleton`, `.skeleton--text`, `.skeleton--chart`, `.skeleton--card`). Applied to FavoriteCard loading state (3-column skeleton grid) and ResortPage initial loader (chart + text skeletons).
+- **Cross-chart tooltip sync** — BaseChart now calls `echarts.connect(group)` when a group prop is provided, enabling synchronized tooltips and dataZoom across charts sharing the same group ID. HourlyDetailChart, HourlySnowChart, and FreezingLevelChart each already pass group IDs.
+- **Section title accent** — `.section-title` now has a 3px left border accent (`border-left: 3px solid var(--color-accent)`) for visual hierarchy.
+- **Day card animations** — Day cards use `fadeInUp` entrance with stagger delays via `.stagger-children`. Added `:active` press state (`scale(0.97)`). Enhanced selected state with stronger box-shadow and inset glow.
+- **Card hover polish** — ResortCard and FavoriteCard hover states now include subtle accent border glow (`border-color: rgba(56, 189, 248, 0.15/0.2)`) and enhanced shadow. FavoriteCard snow values get `snowPulse` animation for subtle text glow.
+- **HomePage polish** — Search input gets cyan focus ring + glow shadow. Hero section, region sections animate in with `fadeInUp`. Region titles get left accent border. Favorites section gets ambient glow on hover.
+- **Scroll-to-top button** — New floating button (bottom-right) appears when scrolled past 400px. Pill shape, accent hover, smooth reveal animation. Responsive sizing on mobile.
+- **FAB group polish** — FABs get enhanced hover shadow (`box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25)`). Favorite star on ResortPage gets `pulseGlow` when active.
+- **ElevationToggle polish** — Active state gets inset glow (`box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.15)`).
+- **SnowTimeline + ConditionsSummary** — Both components get `fadeInUp` entrance animation.
+- **Focus visible** — Global `:focus-visible` ring (`2px solid var(--color-accent), offset 2px`) for keyboard accessibility.
+- **Bug fix** — Fixed typo `"reso  rt-page__chart-block"` → `"resort-page__chart-block"` in ResortPage.tsx.
+
+### Why it changed
+- Animations provide visual feedback, guide attention to new data, and make the UI feel more responsive/alive.
+- Skeleton loading states are a modern UX pattern that reduces perceived wait time vs. plain text spinners.
+- Cross-chart sync lets users correlate data across multiple hourly charts simultaneously.
+- Accessibility requirements demand motion reduction support and visible focus states.
+
+### Key files affected
+- `src/styles/index.css` — Global animations, skeletons, focus, reduced motion
+- `src/pages/ResortPage.tsx` — Skeleton loader, animation classes, stagger, typo fix
+- `src/pages/ResortPage.css` — Section accent, day card animations, stats hover, skeleton section
+- `src/pages/HomePage.css` — Search glow, hero animation, region title accent, favorites hover
+- `src/components/FavoriteCard.tsx` — Skeleton loading state
+- `src/components/FavoriteCard.css` — Skeleton grid, snow pulse, card hover glow
+- `src/components/ResortCard.css` — Card entrance animation, hover border glow
+- `src/components/Layout.tsx` — Scroll-to-top button (state + JSX)
+- `src/components/Layout.css` — Scroll-to-top styles, FAB hover shadow
+- `src/components/ElevationToggle.css` — Active inset glow
+- `src/components/SnowTimeline.css` — Entrance animation
+- `src/components/ConditionsSummary.css` — Entrance animation
+- `src/components/charts/BaseChart.tsx` — `echarts.connect()` for cross-chart sync
+
 ## Status vs Plan
 
 | Feature | Status |
@@ -514,6 +554,7 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 | Snowfall recalculation (accuracy fix) | ✅ Complete |
 | UI/UX Phase 1 — Design system + ECharts | ✅ Complete |
 | UI/UX Phase 2 — Snow Timeline + Conditions + Resort restructure | ✅ Complete |
+| UI/UX Phase 4 — Polish + Animations | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |
