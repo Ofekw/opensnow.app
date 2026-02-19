@@ -411,6 +411,46 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 - `src/components/charts/DailyForecastChart.tsx`
 - `src/components/charts/HourlyDetailChart.tsx`
 
+---
+
+## Phase 14: UI/UX Overhaul — Phase 1 (Design System & ECharts Migration)
+
+### What changed
+- **Chart library migration**: Replaced Recharts with Apache ECharts 6 + echarts-for-react 3.0.6. All 7 chart components fully rewritten.
+- **Design tokens overhaul**: New deeper navy Grafana-inspired palette (`--color-bg: #0b1120`, `--color-surface: #141b2d`, `--color-surface-raised: #1e2942`), semantic chart color tokens (`--chart-snow`, `--chart-rain`, `--chart-temp-high`, etc.), glow shadows.
+- **Typography**: Added DM Sans (display/UI) and Space Mono (data/mono) via Google Fonts.
+- **ECharts theme system**: Created centralized `echarts-theme.ts` with registered 'freesnow' theme and builder helpers (`makeTooltip`, `makeLegend`, `makeGrid`, `makeCategoryAxis`, `makeValueAxis`, `makeBarSeries`, `makeLineSeries`, `makeDashedLineSeries`, `makeDataZoom`).
+- **BaseChart wrapper**: New `BaseChart.tsx` thin wrapper applying theme, responsive sizing, optional cross-chart group sync.
+- **Chart feature improvements**:
+  - All charts now have toggleable legends (ECharts native)
+  - DailyForecastChart & HourlyDetailChart: dual Y-axes, feels-like dashed lines
+  - HourlyDetailChart: wind speed + gusts now rendered (previously computed but hidden)
+  - HourlySnowChart: precipitation probability now rendered as dotted line
+  - RecentSnowChart: proper legend + dataZoom slider for panning
+  - FreezingLevelChart: gradient fill + optional resort elevation markLine reference
+  - UVIndexChart: color-coded severity legend, value labels on bars, timezone-aware date formatting
+  - SnowHistoryChart: **bug fix** — now respects units context (was hardcoded to imperial)
+
+### Why it changed
+- UI/UX overhaul initiative for powder hunters — needed interactive Grafana-style charts with toggleable legends, uniform increments, rich tooltips, and dataZoom for exploration.
+- Recharts lacked native legend toggling, dataZoom, cross-chart sync, and built-in dark theme support.
+- Typography and color palette refresh to establish unique brand identity distinct from competitors (OpenSnow, snow-forecast.com).
+
+### Key files affected
+- `package.json` — echarts deps added, recharts removed
+- `index.html` — Google Fonts links, updated title/theme-color
+- `src/styles/index.css` — full design token overhaul
+- `src/components/charts/echarts-theme.ts` — NEW: theme + helpers
+- `src/components/charts/BaseChart.tsx` — NEW: wrapper component
+- `src/components/charts/DailyForecastChart.tsx` — rewritten
+- `src/components/charts/HourlyDetailChart.tsx` — rewritten
+- `src/components/charts/HourlySnowChart.tsx` — rewritten
+- `src/components/charts/RecentSnowChart.tsx` — rewritten
+- `src/components/charts/FreezingLevelChart.tsx` — rewritten
+- `src/components/charts/UVIndexChart.tsx` — rewritten
+- `src/components/charts/SnowHistoryChart.tsx` — rewritten
+- `src/pages/ResortPage.tsx` — added resortElevation prop to FreezingLevelChart
+
 ## Status vs Plan
 
 | Feature | Status |
@@ -438,6 +478,7 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 | Comprehensive UI unit tests | ✅ Complete |
 | PR screenshot generation | ✅ Complete |
 | Snowfall recalculation (accuracy fix) | ✅ Complete |
+| UI/UX Phase 1 — Design system + ECharts | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |

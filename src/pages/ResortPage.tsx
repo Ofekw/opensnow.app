@@ -228,7 +228,7 @@ export function ResortPage() {
 
             <section className="resort-page__section resort-page__section--half">
               <h3 className="section-subtitle">Freezing Level</h3>
-              <FreezingLevelChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
+              <FreezingLevelChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} resortElevation={resort.elevation[band]} />
             </section>
           </div>
         </>
