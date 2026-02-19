@@ -66,15 +66,24 @@ export function ResortPage() {
     return bandData.hourly.filter((h) => h.time.startsWith(selectedDay.date));
   }, [bandData, selectedDay]);
 
-  // Compute snowpack depth (max snow depth for today from selected band)
+  // Compute snowpack depth — max snow_depth across ALL bands for today.
+  // snow_depth is a grid-cell value so we take the max across bands to match
+  // the Conditions table (which also uses all bands).
   const snowpackDepthCm = useMemo(() => {
-    if (!bandData?.daily[0]) return null;
-    const todayDate = bandData.daily[0].date;
-    const todayHourly = bandData.hourly.filter((h) => h.time.startsWith(todayDate));
-    const depths = todayHourly.filter((h) => h.snowDepth != null).map((h) => h.snowDepth!);
+    if (!forecast) return null;
+    const allBands = [forecast.base, forecast.mid, forecast.top].filter(
+      (b): b is BandForecast => b != null,
+    );
+    const first = allBands[0];
+    const todayDate = first?.daily[0]?.date;
+    if (!todayDate) return null;
+    const depths = allBands
+      .flatMap((b) => b.hourly.filter((h) => h.time.startsWith(todayDate)))
+      .filter((h) => h.snowDepth != null && h.snowDepth > 0)
+      .map((h) => h.snowDepth!);
     if (!depths.length) return null;
     return Math.max(...depths) * 100; // m → cm
-  }, [bandData]);
+  }, [forecast]);
 
   if (!resort) {
     return (
