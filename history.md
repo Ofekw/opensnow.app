@@ -451,6 +451,40 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 - `src/components/charts/SnowHistoryChart.tsx` — rewritten
 - `src/pages/ResortPage.tsx` — added resortElevation prop to FreezingLevelChart
 
+---
+
+## Phase 15: UI/UX Overhaul — Phase 2 (Snow Timeline, Conditions Summary, Resort Page Restructure)
+
+### What changed
+- **SnowTimeline component** — OpenSnow-inspired compact past 7 + future 7 day snowfall bar chart with "today" divider. Shows at-a-glance snow trend with totals for each period. Uses CSS bars with gradient fill (future) vs muted (past). Placed in hero position on resort page.
+- **ConditionsSummary component** — snow-forecast.com-inspired 3-elevation comparison table for the selected day. Shows weather, temperature (high/low), snow, rain, wind (+ gusts), precipitation probability, and average freezing level across Base/Mid/Top bands. Uses CSS grid layout with responsive design.
+- **ResortPage restructure** — New information hierarchy:
+  1. Header + stats (unchanged)
+  2. **Snow Timeline** (hero position — first data the user sees)
+  3. Band toggle + refresh
+  4. **Conditions Summary** (all-elevation at-a-glance, with "All Elevations" badge)
+  5. 7-Day Snow section (day cards + DailyForecastChart + HourlySnowChart)
+  6. Hourly Detail chart
+  7. UV + Freezing Level grid
+  8. Recent Snowfall
+- **CSS polish** — Section header with badge component, stats row uses `font-mono` for data values, updated border/radius tokens.
+- **20 new tests** — 10 for SnowTimeline (rendering, data display, edge cases, accessibility), 10 for ConditionsSummary (table structure, elevation bands, weather data display, unit formatting).
+
+### Why it changed
+- Powder hunters need an instant visual read on the snow trend — the SnowTimeline gives this at a glance before any scrolling.
+- Comparing conditions across elevations (snow-forecast.com style) helps users decide which lifts to target.
+- Previous layout showed only the selected elevation band's conditions; now the ConditionsSummary shows all three bands simultaneously.
+
+### Key files affected
+- `src/components/SnowTimeline.tsx` — NEW
+- `src/components/SnowTimeline.css` — NEW
+- `src/components/ConditionsSummary.tsx` — NEW
+- `src/components/ConditionsSummary.css` — NEW
+- `src/components/__tests__/SnowTimeline.test.tsx` — NEW (10 tests)
+- `src/components/__tests__/ConditionsSummary.test.tsx` — NEW (10 tests)
+- `src/pages/ResortPage.tsx` — restructured layout + new component integration
+- `src/pages/ResortPage.css` — section header badge, stat font-mono, border updates
+
 ## Status vs Plan
 
 | Feature | Status |
@@ -479,6 +513,7 @@ Higher elevations now correctly show ≥ snowfall of lower elevations because:
 | PR screenshot generation | ✅ Complete |
 | Snowfall recalculation (accuracy fix) | ✅ Complete |
 | UI/UX Phase 1 — Design system + ECharts | ✅ Complete |
+| UI/UX Phase 2 — Snow Timeline + Conditions + Resort restructure | ✅ Complete |
 | Map-based resort browser | 🔲 Not started |
 | Global resort coverage | 🔲 Not started |
 | Snow report / current conditions | 🔲 Not started |

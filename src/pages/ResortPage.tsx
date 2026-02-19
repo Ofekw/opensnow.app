@@ -5,6 +5,8 @@ import { useForecast } from '@/hooks/useWeather';
 import { fetchForecast } from '@/data/openmeteo';
 import { useFavorites } from '@/hooks/useFavorites';
 import { ElevationToggle } from '@/components/ElevationToggle';
+import { SnowTimeline } from '@/components/SnowTimeline';
+import { ConditionsSummary } from '@/components/ConditionsSummary';
 import { DailyForecastChart } from '@/components/charts/DailyForecastChart';
 import { HourlyDetailChart } from '@/components/charts/HourlyDetailChart';
 import { HourlySnowChart } from '@/components/charts/HourlySnowChart';
@@ -137,7 +139,18 @@ export function ResortPage() {
         )}
       </section>
 
-      {/* Band toggle */}
+      {/* ─── SNOW TIMELINE (hero position) ─── */}
+      {bandData && recentDays.length > 0 && (
+        <section className="resort-page__section">
+          <h2 className="section-title">❄️ Snow Timeline</h2>
+          <SnowTimeline
+            recentDays={recentDays}
+            forecastDays={bandData.daily}
+          />
+        </section>
+      )}
+
+      {/* Band toggle + refresh */}
       <div className="resort-page__toggle-row">
         <ElevationToggle
           value={band}
@@ -155,8 +168,27 @@ export function ResortPage() {
         <div className="resort-page__loader">Loading forecast…</div>
       )}
 
-      {bandData && (
+      {bandData && forecast && (
         <>
+          {/* ─── CONDITIONS AT A GLANCE ─── */}
+          <section className="resort-page__section">
+            <div className="resort-page__section-header">
+              <h2 className="section-title">
+                📊 Conditions — {selectedDayLabel}
+              </h2>
+              <span className="resort-page__section-badge">All Elevations</span>
+            </div>
+            <ConditionsSummary
+              bands={{
+                base: forecast.base,
+                mid: forecast.mid,
+                top: forecast.top,
+              }}
+              selectedDayIdx={selectedDayIdx}
+              elevations={resort.elevation}
+            />
+          </section>
+
           {/* ─── SNOWFALL SECTION ─── */}
           <section className="resort-page__snow-section">
             <div className="resort-page__snow-section-header">
@@ -214,20 +246,21 @@ export function ResortPage() {
             )}
           </section>
 
-          {/* ─── CONDITIONS SECTION ─── */}
+          {/* ─── DETAILED CONDITIONS ─── */}
           <section className="resort-page__section">
-            <h2 className="section-title">Detailed Conditions — {selectedDayLabel}</h2>
+            <h2 className="section-title">🔍 Hourly Detail — {selectedDayLabel}</h2>
             <HourlyDetailChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} />
           </section>
 
+          {/* ─── UV + FREEZING LEVEL GRID ─── */}
           <div className="resort-page__conditions-grid">
             <section className="resort-page__section resort-page__section--half">
-              <h3 className="section-subtitle">UV Index</h3>
+              <h3 className="section-subtitle">☀️ UV Index</h3>
               <UVIndexChart daily={bandData.daily} />
             </section>
 
             <section className="resort-page__section resort-page__section--half">
-              <h3 className="section-subtitle">Freezing Level</h3>
+              <h3 className="section-subtitle">🧊 Freezing Level</h3>
               <FreezingLevelChart hourly={selectedDayHourly.length > 0 ? selectedDayHourly : bandData.hourly.slice(0, 24)} resortElevation={resort.elevation[band]} />
             </section>
           </div>
@@ -236,7 +269,7 @@ export function ResortPage() {
 
       {/* ─── RECENT SNOWFALL ─── */}
       <section className="resort-page__section">
-        <h2 className="section-title">Recent Snowfall (past 14 days)</h2>
+        <h2 className="section-title">📈 Recent Snowfall (past 14 days)</h2>
         {histLoading ? (
           <div className="resort-page__loader">Loading history…</div>
         ) : recentDays.length > 0 ? (
