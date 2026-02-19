@@ -8,6 +8,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-md);
+  padding-right: 260px;
   animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -292,6 +293,9 @@
 }
 
 @media (max-width: 640px) {
+  .resort-page__header {
+    padding-right: 210px;
+  }
   .resort-page__name {
     font-size: 1.3rem;
   }
