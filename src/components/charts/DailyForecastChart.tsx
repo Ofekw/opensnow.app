@@ -14,7 +14,6 @@ import {
   makeValueAxis,
   makeBarSeries,
   makeLineSeries,
-  makeDashedLineSeries,
 } from './echarts-theme';
 
 interface Props {
@@ -42,12 +41,6 @@ export function DailyForecastChart({ daily }: Props) {
     const lowData = daily.map((d) =>
       isImperial ? Math.round(d.temperatureMin * 9 / 5 + 32) : Math.round(d.temperatureMin),
     );
-    const feelsHighData = daily.map((d) =>
-      isImperial ? Math.round(d.apparentTemperatureMax * 9 / 5 + 32) : Math.round(d.apparentTemperatureMax),
-    );
-    const feelsLowData = daily.map((d) =>
-      isImperial ? Math.round(d.apparentTemperatureMin * 9 / 5 + 32) : Math.round(d.apparentTemperatureMin),
-    );
 
     const precipLabel = isImperial ? 'in' : snowUnit;
     const tempLabel = `°${tempUnit}`;
@@ -55,10 +48,10 @@ export function DailyForecastChart({ daily }: Props) {
     return {
       tooltip: makeTooltip(),
       legend: makeLegend(
-        [`Snow (${precipLabel})`, `Rain (${precipLabel})`, `High ${tempLabel}`, `Low ${tempLabel}`, 'Feels High', 'Feels Low'],
+        [`Snow (${precipLabel})`, `Rain (${precipLabel})`, `High ${tempLabel}`, `Low ${tempLabel}`],
         { bottom: 0 },
       ),
-      grid: makeGrid({ bottom: 60, right: 56 }),
+      grid: makeGrid({ bottom: 48, right: 56 }),
       xAxis: [makeCategoryAxis(dates)],
       yAxis: [
         makeValueAxis({
@@ -85,8 +78,6 @@ export function DailyForecastChart({ daily }: Props) {
         }),
         makeLineSeries(`High ${tempLabel}`, highData, COLORS.tempHigh, { yAxisIndex: 1 }),
         makeLineSeries(`Low ${tempLabel}`, lowData, COLORS.tempLow, { yAxisIndex: 1 }),
-        makeDashedLineSeries('Feels High', feelsHighData, COLORS.tempHigh, { yAxisIndex: 1 }),
-        makeDashedLineSeries('Feels Low', feelsLowData, COLORS.tempLow, { yAxisIndex: 1 }),
       ],
     };
   }, [daily, isImperial, tempUnit, snowUnit, fmtDate]);

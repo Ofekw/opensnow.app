@@ -62,7 +62,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
 
   const fmtPrecip = (mm: number) => {
     if (isImperial) return `${(mm / 25.4).toFixed(1)}"`;
-    return `${(mm / 10).toFixed(1)}cm`;
+    return `${mm.toFixed(1)}mm`;
   };
 
   return (
