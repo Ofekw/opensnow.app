@@ -35,8 +35,11 @@ export function HourlyDetailChart({ hourly }: Props) {
       isImperial ? +cmToIn(h.snowfall).toFixed(2) : +h.snowfall.toFixed(1),
     );
     // Scale rain by 1/6 for hourly as per requirements
-    const rainDotsData = hourly.map((h) =>
-      getRainDotRating((isImperial ? h.rain / MM_PER_INCH : h.rain / MM_PER_CM) / 6),
+    const rainTotals = hourly.map((h) =>
+      isImperial ? h.rain / MM_PER_INCH : h.rain / MM_PER_CM,
+    );
+    const rainDotsData = hourly.map((_, index) =>
+      getRainDotRating(rainTotals[index]! / 6),
     );
     const tempData = hourly.map((h) =>
       isImperial ? Math.round(h.temperature * 9 / 5 + 32) : Math.round(h.temperature),
@@ -56,7 +59,30 @@ export function HourlyDetailChart({ hourly }: Props) {
     const windLabel = isImperial ? 'mph' : 'km/h';
 
     return {
-      tooltip: makeTooltip(),
+      tooltip: {
+        ...makeTooltip(),
+        formatter: (params: any) => {
+          if (!Array.isArray(params)) return '';
+          
+          const rainUnit = isImperial ? 'in' : 'cm';
+          const lines = params
+            .map((p: any) => {
+              const colorCircle = `<span style="display:inline-block;margin-right:4px;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>`;
+              
+              // Special handling for rain series
+              if (p.seriesName === `Rain (0-3 rating)`) {
+                const rainTotal = rainTotals[p.dataIndex] || 0;
+                const rainFormatted = rainTotal.toFixed(isImperial ? 2 : 1);
+                return `${colorCircle}Rain (${rainUnit}): ${rainFormatted}`;
+              }
+              // Default formatting for other series
+              return `${colorCircle}${p.seriesName}: ${p.value}`;
+            })
+            .filter(Boolean);
+          
+          return lines.join('<br/>');
+        },
+      },
       legend: makeLegend(
         [`Snow (${precipLabel})`, `Rain (0-3 rating)`, `Temp ${tempLabel}`, `Feels ${tempLabel}`, `Wind (${windLabel})`, `Gusts (${windLabel})`],
         { bottom: 24 },
@@ -102,12 +128,6 @@ export function HourlyDetailChart({ hourly }: Props) {
             itemStyle: {
               color: COLORS.rain,
               opacity: 1,
-            },
-          },
-          tooltip: {
-            formatter: (params: any) => {
-              const dotCount = params.value || 0;
-              return `${params.name}<br/>${params.seriesName}: ${dotCount} dot${dotCount !== 1 ? 's' : ''}`;
             },
           },
           z: 10, // Render on top of snow bars

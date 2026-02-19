@@ -32,8 +32,11 @@ export function DailyForecastChart({ daily }: Props) {
     const snowData = daily.map((d) =>
       isImperial ? +cmToIn(d.snowfallSum).toFixed(1) : +d.snowfallSum.toFixed(1),
     );
-    const rainDotsData = daily.map((d) =>
-      getRainDotRating(isImperial ? d.rainSum / MM_PER_INCH : d.rainSum / MM_PER_CM),
+    const rainTotals = daily.map((d) =>
+      isImperial ? d.rainSum / MM_PER_INCH : d.rainSum / MM_PER_CM,
+    );
+    const rainDotsData = daily.map((_, index) =>
+      getRainDotRating(rainTotals[index]!),
     );
     const highData = daily.map((d) =>
       isImperial ? Math.round(d.temperatureMax * 9 / 5 + 32) : Math.round(d.temperatureMax),
@@ -46,7 +49,30 @@ export function DailyForecastChart({ daily }: Props) {
     const tempLabel = `°${tempUnit}`;
 
     return {
-      tooltip: makeTooltip(),
+      tooltip: {
+        ...makeTooltip(),
+        formatter: (params: any) => {
+          if (!Array.isArray(params)) return '';
+          
+          const rainUnit = isImperial ? 'in' : 'cm';
+          const lines = params
+            .map((p: any) => {
+              const colorCircle = `<span style="display:inline-block;margin-right:4px;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>`;
+              
+              // Special handling for rain series
+              if (p.seriesName === `Rain (0-3 rating)`) {
+                const rainTotal = rainTotals[p.dataIndex] || 0;
+                const rainFormatted = rainTotal.toFixed(isImperial ? 2 : 1);
+                return `${colorCircle}Rain (${rainUnit}): ${rainFormatted}`;
+              }
+              // Default formatting for other series
+              return `${colorCircle}${p.seriesName}: ${p.value}`;
+            })
+            .filter(Boolean);
+          
+          return lines.join('<br/>');
+        },
+      },
       legend: makeLegend(
         [`Snow (${precipLabel})`, `Rain (0-3 rating)`, `High ${tempLabel}`, `Low ${tempLabel}`],
         { bottom: 0 },
@@ -91,12 +117,6 @@ export function DailyForecastChart({ daily }: Props) {
             itemStyle: {
               color: COLORS.rain,
               opacity: 1,
-            },
-          },
-          tooltip: {
-            formatter: (params: any) => {
-              const dotCount = params.value || 0;
-              return `${params.name}<br/>${params.seriesName}: ${dotCount} dot${dotCount !== 1 ? 's' : ''}`;
             },
           },
           z: 10, // Render on top of snow bars
