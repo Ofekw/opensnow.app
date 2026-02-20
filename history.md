@@ -683,3 +683,16 @@ The plan identified four independent accuracy improvements, all achievable with 
 
 ### Test impact
 - 217 tests across 21 files, all passing
+---
+
+## SPA Navigation Fallback for Azure Static Web Apps
+
+### Problem
+Direct navigation or bookmarks to deep links (e.g., `https://opensnow.app/resort/crystal-mountain-wa`) returned a 404 because Azure Static Web Apps tried to find a matching file on disk instead of serving the SPA's `index.html`.
+
+### Fix
+- Added `public/staticwebapp.config.json` with a `navigationFallback` rule that rewrites all non-asset routes to `/index.html`, allowing React Router to handle client-side routing.
+- Static assets (CSS, JS, images, fonts, JSON, webmanifest) are excluded from the rewrite so they continue to load normally.
+
+### Files affected
+- `public/staticwebapp.config.json` (new)
