@@ -165,7 +165,7 @@ export function ResortPage() {
         )}
         {snowpackDepthCm != null && snowpackDepthCm > 0 && (
           <div className="stat stat--snowpack">
-            <span className="stat__label"><Layers size={12} /> Snowpack</span>
+            <span className="stat__label"><Layers size={12} /> Total Snow</span>
             <span className="stat__value">
               {snow === 'in'
                 ? `${Math.round(cmToIn(snowpackDepthCm))}"`

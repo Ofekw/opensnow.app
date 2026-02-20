@@ -57,28 +57,23 @@ export function FreezingLevelChart({ hourly, resortElevation }: Props) {
       },
     ];
 
-    // Resort elevation reference line
-    const markLine: Record<string, unknown> | undefined = resortElevation
-      ? {
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            lineStyle: { color: COLORS.tempHigh, type: 'dashed', width: 1.5 },
-            label: {
-              formatter: `Resort ${isImperial ? Math.round(resortElevation * 3.28084).toLocaleString() : resortElevation.toLocaleString()} ${elev}`,
-              color: COLORS.tempHigh,
-              fontSize: 10,
-              fontFamily: "'Space Mono', monospace",
-            },
-            data: [
-              { yAxis: isImperial ? Math.round(resortElevation * 3.28084) : resortElevation },
-            ],
-          },
-        }
-      : undefined;
-
-    if (markLine) {
-      series[0] = { ...series[0], ...markLine };
+    // Resort elevation as a constant dashed reference line
+    if (resortElevation) {
+      const elevValue = isImperial
+        ? Math.round(resortElevation * 3.28084)
+        : resortElevation;
+      const elevLabel = `Resort Elev (${elevValue.toLocaleString()} ${elev})`;
+      legendItems.push(elevLabel);
+      series.push({
+        name: elevLabel,
+        type: 'line',
+        data: times.map(() => elevValue),
+        itemStyle: { color: COLORS.tempHigh },
+        lineStyle: { color: COLORS.tempHigh, width: 1.5, type: 'dashed' },
+        symbol: 'none',
+        smooth: false,
+        tooltip: { show: false },
+      });
     }
 
     return {
@@ -89,6 +84,8 @@ export function FreezingLevelChart({ hourly, resortElevation }: Props) {
           if (!first) return '';
           let html = `<div style="font-weight:600;margin-bottom:4px">${first.axisValueLabel}</div>`;
           for (const item of items) {
+            // Skip resort elevation from tooltip (it's constant / already in legend)
+            if (typeof item.seriesName === 'string' && item.seriesName.startsWith('Resort Elev')) continue;
             html += `<div>${item.marker} ${item.seriesName}: <strong>${item.value.toLocaleString()} ${elev}</strong></div>`;
           }
           return html;
