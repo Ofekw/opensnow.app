@@ -214,7 +214,7 @@ export function ConditionsSummary({ bands, selectedDayIdx, elevations }: Props) 
           return (
             <div className="conditions-summary__row" role="row">
               <div className="conditions-summary__cell conditions-summary__cell--label" role="rowheader">
-                <Layers size={14} className="label-icon" /> Snowpack
+                <Layers size={14} className="label-icon" /> Total Snow
               </div>
               <div className="conditions-summary__cell conditions-summary__cell--full" role="cell" style={{ gridColumn: 'span 3' }}>
                 <span className="conditions-summary__snowpack">

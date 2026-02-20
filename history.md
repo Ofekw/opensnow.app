@@ -661,3 +661,25 @@ The plan identified four independent accuracy improvements, all achievable with 
 
 ### Test impact
 - 215 tests across 21 files, all passing (0 new tests needed — existing tests updated for icon string changes)
+
+---
+
+## Snow Timeline — Today Bar Enhancement
+
+### What changed
+- The "Today" divider in the SnowTimeline component was previously just a thin vertical line separator between past and future bars.
+- Now it renders as a full bar column showing today's expected snowfall amount (value label + proportional bar), styled with the accent color and a glow effect.
+- Today's data is extracted from the first element of `forecastDays` and displayed distinctly from both past and future bars.
+- The future section now shows days 2–7 of the forecast (6 bars), while today stands alone in the center.
+- "Next 7d" total still includes today's snowfall in the sum.
+
+### Why
+- Users couldn't see today's expected snowfall at a glance — the thin divider wasted the most important data point.
+
+### Key files affected
+- `src/components/SnowTimeline.tsx` — Extracted `todayBar` from forecast data, replaced divider with bar column
+- `src/components/SnowTimeline.css` — Added `.snow-timeline__today` and `.snow-timeline__bar--today` styles
+- `src/components/__tests__/SnowTimeline.test.tsx` — Updated bar count expectations, added 3 new tests for today bar
+
+### Test impact
+- 217 tests across 21 files, all passing

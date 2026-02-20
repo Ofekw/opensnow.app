@@ -84,10 +84,12 @@ describe('SnowTimeline', () => {
     expect(totalValues).toHaveLength(2);
   });
 
-  it('renders 14 bar columns (7 past + 7 future)', () => {
+  it('renders 13 bar columns (7 past + 6 future) plus today', () => {
     const { container } = renderTimeline(recentDays, forecastDays);
     const barCols = container.querySelectorAll('.snow-timeline__bar-col');
-    expect(barCols).toHaveLength(14);
+    expect(barCols).toHaveLength(13);
+    const todayBar = container.querySelector('.snow-timeline__today');
+    expect(todayBar).toBeInTheDocument();
   });
 
   it('renders past bars with past style', () => {
@@ -99,7 +101,23 @@ describe('SnowTimeline', () => {
   it('renders future bars with future style', () => {
     const { container } = renderTimeline(recentDays, forecastDays);
     const futureBars = container.querySelectorAll('.snow-timeline__bar--future');
-    expect(futureBars.length).toBe(7);
+    expect(futureBars.length).toBe(6);
+  });
+
+  it('renders today bar with today style when snowfall > 0', () => {
+    const { container } = renderTimeline(recentDays, forecastDays);
+    const todayBar = container.querySelector('.snow-timeline__bar--today');
+    expect(todayBar).toBeInTheDocument();
+    // forecastDays[0] has 10cm snow = 3.9" in imperial
+    expect(todayBar!.style.height).not.toBe('0%');
+  });
+
+  it('shows today snowfall value', () => {
+    const { container } = renderTimeline(recentDays, forecastDays);
+    const todayValue = container.querySelector('.snow-timeline__bar-value--today');
+    expect(todayValue).toBeInTheDocument();
+    // 10cm = 3.9" (imperial default)
+    expect(todayValue!.textContent).toBe('3.9');
   });
 
   it('handles empty recent days gracefully', () => {

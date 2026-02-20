@@ -131,21 +131,31 @@
   white-space: nowrap;
 }
 
-/* Today divider */
-.snow-timeline__divider {
+/* Today bar column */
+.snow-timeline__today {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 var(--space-xs);
   flex-shrink: 0;
+  min-width: 40px;
+  max-width: 52px;
   gap: 2px;
-  /* align with bar area */
-  margin-top: 14px; /* match bar-value height */
+  padding: 0 var(--space-xs);
+}
+
+.snow-timeline__bar-value--today {
+  color: var(--color-accent);
+}
+
+.snow-timeline__bar--today {
+  background: linear-gradient(to top, rgba(56, 189, 248, 0.7), rgba(56, 189, 248, 1));
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+  border: 1px solid rgba(56, 189, 248, 0.6);
 }
 
 .snow-timeline__divider-line {
   width: 2px;
-  height: 64px;
+  height: 100%;
   background: linear-gradient(to bottom, var(--color-accent), transparent);
   border-radius: 1px;
 }
@@ -170,10 +180,6 @@
   }
 
   .snow-timeline__bar-track {
-    height: 48px;
-  }
-
-  .snow-timeline__divider-line {
     height: 48px;
   }
 

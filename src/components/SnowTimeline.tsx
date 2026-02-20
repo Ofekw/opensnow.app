@@ -24,10 +24,12 @@ export function SnowTimeline({ recentDays, forecastDays }: Props) {
   const { fmtDate } = useTimezone();
   const isImperial = snow === 'in';
 
-  const { pastBars, futureBars, maxSnow, pastTotal, futureTotal } = useMemo(() => {
+  const { pastBars, todayBar, futureBars, maxSnow, pastTotal, futureTotal } = useMemo(() => {
     // Take last 7 past days
     const past = recentDays.slice(-7);
-    const future = forecastDays.slice(0, 7);
+    // First forecast day is today; the rest are future
+    const [todayDay, ...rest] = forecastDays;
+    const future = rest.slice(0, 7);
 
     const toDisplay = (cm: number) =>
       isImperial ? +cmToIn(cm).toFixed(1) : +cm.toFixed(1);
@@ -38,19 +40,24 @@ export function SnowTimeline({ recentDays, forecastDays }: Props) {
       raw: d.snowfallSum,
     }));
 
+    const todayBar = todayDay
+      ? { date: todayDay.date, snow: toDisplay(todayDay.snowfallSum), raw: todayDay.snowfallSum }
+      : null;
+
     const futureBars = future.map((d) => ({
       date: d.date,
       snow: toDisplay(d.snowfallSum),
       raw: d.snowfallSum,
     }));
 
-    const allSnow = [...pastBars, ...futureBars].map((b) => b.snow);
+    const allSnow = [...pastBars, ...(todayBar ? [todayBar] : []), ...futureBars].map((b) => b.snow);
     const maxSnow = Math.max(...allSnow, 0.1); // avoid 0 max
 
     const pastTotal = past.reduce((s, d) => s + d.snowfallSum, 0);
-    const futureTotal = future.reduce((s, d) => s + d.snowfallSum, 0);
+    const futureTotal =
+      (todayDay ? todayDay.snowfallSum : 0) + future.reduce((s, d) => s + d.snowfallSum, 0);
 
-    return { pastBars, futureBars, maxSnow, pastTotal, futureTotal };
+    return { pastBars, todayBar, futureBars, maxSnow, pastTotal, futureTotal };
   }, [recentDays, forecastDays, isImperial]);
 
   const fmtDay = (dateStr: string) =>
@@ -104,9 +111,23 @@ export function SnowTimeline({ recentDays, forecastDays }: Props) {
           })}
         </div>
 
-        {/* Today divider */}
-        <div className="snow-timeline__divider" aria-hidden="true">
-          <div className="snow-timeline__divider-line" />
+        {/* Today bar */}
+        <div className="snow-timeline__today" aria-label="Today">
+          <span className="snow-timeline__bar-value snow-timeline__bar-value--today">
+            {todayBar && todayBar.snow > 0 ? `${todayBar.snow}` : ''}
+          </span>
+          <div className="snow-timeline__bar-track">
+            {todayBar ? (
+              <div
+                className="snow-timeline__bar snow-timeline__bar--today"
+                style={{
+                  height: `${Math.max((todayBar.snow / maxSnow) * 100, todayBar.snow > 0 ? 4 : 0)}%`,
+                }}
+              />
+            ) : (
+              <div className="snow-timeline__divider-line" />
+            )}
+          </div>
           <span className="snow-timeline__divider-label">Today</span>
         </div>
 
