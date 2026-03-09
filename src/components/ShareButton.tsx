@@ -76,24 +76,47 @@ export function ShareButton({ cardData }: Props) {
       }
 
       // Fallback: copy image to clipboard + show URL
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob }),
-        ]);
-        setState('copied');
-        showToast('Screenshot copied to clipboard!');
-      } catch {
-        // Final fallback: copy URL to clipboard
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob }),
+          ]);
+          setState('copied');
+          showToast('Screenshot copied to clipboard!');
+        } catch {
+          // Final fallback: copy URL to clipboard if available
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+            setState('copied');
+            showToast('Link copied to clipboard!');
+          } else {
+            // No clipboard access; show URL so user can copy manually
+            setState('copied');
+            showToast(`Share link: ${shareUrl}`);
+          }
+        }
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        // No image clipboard support, but can still copy URL
         await navigator.clipboard.writeText(shareUrl);
         setState('copied');
         showToast('Link copied to clipboard!');
+      } else {
+        // No clipboard API available; show URL so user can copy manually
+        setState('copied');
+        showToast(`Share link: ${shareUrl}`);
       }
     } catch {
       // Image generation failed — still try to share the URL
       try {
-        await navigator.clipboard.writeText(shareUrl);
-        setState('copied');
-        showToast('Link copied to clipboard!');
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+          setState('copied');
+          showToast('Link copied to clipboard!');
+        } else {
+          // No clipboard API available; show URL so user can copy manually
+          setState('copied');
+          showToast(`Share link: ${shareUrl}`);
+        }
       } catch {
         setState('error');
         showToast('Failed to share forecast');
