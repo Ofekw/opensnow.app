@@ -12,6 +12,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { ElevationToggle } from '@/components/ElevationToggle';
 import { SnowTimeline } from '@/components/SnowTimeline';
 import { ConditionsSummary } from '@/components/ConditionsSummary';
+import { ShareButton } from '@/components/ShareButton';
 import { DailyForecastChart } from '@/components/charts/DailyForecastChart';
 import { HourlyDetailChart } from '@/components/charts/HourlyDetailChart';
 import { HourlySnowChart } from '@/components/charts/HourlySnowChart';
@@ -23,6 +24,7 @@ import { todayIsoInTimezone } from '@/utils/dateKey';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import type { ElevationBand, BandForecast, DailyMetrics } from '@/types';
+import type { ShareCardData } from '@/utils/shareCard';
 import './ResortPage.css';
 
 export function ResortPage() {
@@ -123,6 +125,20 @@ export function ResortPage() {
     ? bandData.daily.reduce((s, d) => s + d.snowfallSum, 0)
     : 0;
 
+  // Build share card data for the ShareButton
+  const shareCardData: ShareCardData | null = bandData
+    ? {
+        resort,
+        daily: bandData.daily,
+        band,
+        elevation: bandData.elevation,
+        weekTotalSnow,
+        snowUnit: snow,
+        tempUnit: temp,
+        elevUnit: elev,
+      }
+    : null;
+
   return (
     <div className="resort-page">
       {/* Header */}
@@ -152,9 +168,12 @@ export function ResortPage() {
           </p>
         </div>
         <div className="resort-page__header-right">
-          <button className="resort-page__refresh" onClick={handleRefresh} disabled={loading}>
-            {loading ? 'Loading…' : <><RefreshCw size={14} /> Refresh</>}
-          </button>
+          <div className="resort-page__header-actions">
+            <ShareButton cardData={shareCardData} />
+            <button className="resort-page__refresh" onClick={handleRefresh} disabled={loading}>
+              {loading ? 'Loading…' : <><RefreshCw size={14} /> Refresh</>}
+            </button>
+          </div>
           {lastRefreshed && (
             <span className="resort-page__last-refreshed">
               {fmtDate(lastRefreshed.toISOString(), { hour: 'numeric', minute: '2-digit' })}
