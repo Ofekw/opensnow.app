@@ -51,27 +51,30 @@ export function ShareButton({ cardData }: Props) {
       const blob = await shareCardToBlob(canvas);
       const shareText = `${cardData.resort.name} snow forecast — pow.fyi`;
 
-      // Try Web Share API with file support
-      if (navigator.share && navigator.canShare) {
+      // Try Web Share API — prefer file share, fall back to URL-only share
+      if (navigator.share) {
         const file = new File([blob], `${cardData.resort.slug}-forecast.png`, {
           type: 'image/png',
         });
-        const shareData = { title: shareText, text: shareText, url: shareUrl, files: [file] };
+        const fileShareData = { title: shareText, text: shareText, url: shareUrl, files: [file] };
+        const urlShareData = { title: shareText, text: shareText, url: shareUrl };
 
-        if (navigator.canShare(shareData)) {
-          try {
-            await navigator.share(shareData);
-            setState('shared');
-            showToast('Shared successfully!');
-            scheduleReset();
+        const canShareFiles = navigator.canShare?.(fileShareData) ?? false;
+        const shareData = canShareFiles ? fileShareData : urlShareData;
+
+        try {
+          await navigator.share(shareData);
+          setState('shared');
+          showToast('Shared successfully!');
+          scheduleReset();
+          return;
+        } catch (err) {
+          // User cancelled — reset and stop
+          if (err instanceof Error && err.name === 'AbortError') {
+            setState('idle');
             return;
-          } catch (err) {
-            // User cancelled or share failed — fall through to clipboard
-            if (err instanceof Error && err.name === 'AbortError') {
-              setState('idle');
-              return;
-            }
           }
+          // Other share error — fall through to clipboard
         }
       }
 
