@@ -2,7 +2,7 @@
  * ShareButton — Generates a share card screenshot and shares via
  * the Web Share API or copies to clipboard as fallback.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Share2, Check, Copy, X } from 'lucide-react';
 import { renderShareCard, shareCardToBlob } from '@/utils/shareCard';
 import type { ShareCardData } from '@/utils/shareCard';
@@ -16,21 +16,39 @@ type ShareState = 'idle' | 'generating' | 'copied' | 'shared' | 'error';
 export function ShareButton({ cardData }: Props) {
   const [state, setState] = useState<ShareState>('idle');
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(toastTimerRef.current);
+      clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   const showToast = useCallback((msg: string, duration = 3000) => {
+    clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(null), duration);
+    toastTimerRef.current = setTimeout(() => setToast(null), duration);
+  }, []);
+
+  const scheduleReset = useCallback(() => {
+    clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = setTimeout(() => setState('idle'), 2000);
   }, []);
 
   const handleShare = useCallback(async () => {
     if (!cardData) return;
 
+    clearTimeout(resetTimerRef.current);
     setState('generating');
+
+    const shareUrl = `${window.location.origin}/resort/${cardData.resort.slug}`;
 
     try {
       const canvas = renderShareCard(cardData);
       const blob = await shareCardToBlob(canvas);
-      const shareUrl = `${window.location.origin}/resort/${cardData.resort.slug}`;
       const shareText = `${cardData.resort.name} snow forecast — pow.fyi`;
 
       // Try Web Share API with file support
@@ -45,6 +63,7 @@ export function ShareButton({ cardData }: Props) {
             await navigator.share(shareData);
             setState('shared');
             showToast('Shared successfully!');
+            scheduleReset();
             return;
           } catch (err) {
             // User cancelled or share failed — fall through to clipboard
@@ -70,13 +89,19 @@ export function ShareButton({ cardData }: Props) {
         showToast('Link copied to clipboard!');
       }
     } catch {
-      setState('error');
-      showToast('Failed to generate share image');
+      // Image generation failed — still try to share the URL
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setState('copied');
+        showToast('Link copied to clipboard!');
+      } catch {
+        setState('error');
+        showToast('Failed to share forecast');
+      }
     }
 
-    // Reset state after a delay
-    setTimeout(() => setState('idle'), 2000);
-  }, [cardData, showToast]);
+    scheduleReset();
+  }, [cardData, showToast, scheduleReset]);
 
   const icon = state === 'copied' || state === 'shared'
     ? <Check size={14} />
