@@ -30,6 +30,8 @@ export interface Resort {
   acres?: number;
   /** URL to resort website */
   website?: string;
+  /** URL to official resort webcams / mountain cams */
+  camsUrl?: string;
 }
 
 /* ── Hourly weather row ─────────────────────────── */

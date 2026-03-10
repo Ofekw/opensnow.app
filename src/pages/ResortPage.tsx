@@ -204,6 +204,14 @@ export function ResortPage() {
                 </a>
               </>
             )}
+            {resort.camsUrl && (
+              <>
+                {' · '}
+                <a href={resort.camsUrl} target="_blank" rel="noopener noreferrer">
+                  Mountain Cams ↗
+                </a>
+              </>
+            )}
           </p>
         </div>
         <div className="resort-page__header-right">
