@@ -100,36 +100,47 @@ export function ShareButton({ cardData, selectedDayIdx, className }: Props) {
         }
       }
 
-      // Fallback: copy image to clipboard + show URL
+      // Fallback: copy image + URL to clipboard
       if (typeof navigator !== "undefined" && navigator.clipboard?.write) {
         try {
+          // Try to write both image and URL text in one ClipboardItem
           await navigator.clipboard.write([
-            new ClipboardItem({ "image/png": blob }),
+            new ClipboardItem({
+              "image/png": blob,
+              "text/plain": new Blob([shareUrl], { type: "text/plain" }),
+            }),
           ]);
           setState("copied");
-          showToast("Screenshot copied to clipboard!");
+          showToast(`Screenshot + link copied! ${shareUrl}`);
         } catch {
-          // Final fallback: copy URL to clipboard if available
-          if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(shareUrl);
+          // Multi-type write not supported — copy image only, show URL in toast
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ "image/png": blob }),
+            ]);
             setState("copied");
-            showToast("Link copied to clipboard!");
-          } else {
-            // No clipboard access; show URL so user can copy manually
-            setState("copied");
-            showToast(`Share link: ${shareUrl}`);
+            showToast(`Screenshot copied! Link: ${shareUrl}`);
+          } catch {
+            // Image write failed — fall back to URL text
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(shareUrl);
+              setState("copied");
+              showToast("Link copied to clipboard!");
+            } else {
+              setState("copied");
+              showToast(`Share link: ${shareUrl}`);
+            }
           }
         }
       } else if (
         typeof navigator !== "undefined" &&
         navigator.clipboard?.writeText
       ) {
-        // No image clipboard support, but can still copy URL
+        // No image clipboard support — copy URL only
         await navigator.clipboard.writeText(shareUrl);
         setState("copied");
         showToast("Link copied to clipboard!");
       } else {
-        // No clipboard API available; show URL so user can copy manually
         setState("copied");
         showToast(`Share link: ${shareUrl}`);
       }
