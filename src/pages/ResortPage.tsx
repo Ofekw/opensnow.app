@@ -12,7 +12,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { ElevationToggle } from '@/components/ElevationToggle';
 import { SnowTimeline } from '@/components/SnowTimeline';
 import { ConditionsSummary } from '@/components/ConditionsSummary';
-import { ShareButton } from '@/components/ShareButton';
+import { useShare } from '@/context/ShareContext';
 import { DailyForecastChart } from '@/components/charts/DailyForecastChart';
 import { HourlyDetailChart } from '@/components/charts/HourlyDetailChart';
 import { HourlySnowChart } from '@/components/charts/HourlySnowChart';
@@ -35,6 +35,7 @@ export function ResortPage() {
   const { toggle: toggleFav, isFav } = useFavorites();
   const { temp, elev, snow } = useUnits();
   const { tz, fmtDate } = useTimezone();
+  const { setShareData } = useShare();
 
   // Initialise elevation band and selected day from URL query params (deep-link support)
   const initialBand = useMemo(() => {
@@ -150,18 +151,33 @@ export function ResortPage() {
     : 0;
 
   // Build share card data for the ShareButton
-  const shareCardData: ShareCardData | null = bandData
-    ? {
-        resort,
-        daily: bandData.daily,
-        band,
-        elevation: bandData.elevation,
-        weekTotalSnow,
-        snowUnit: snow,
-        tempUnit: temp,
-        elevUnit: elev,
-      }
-    : null;
+  const shareCardData: ShareCardData | null = useMemo(
+    () =>
+      bandData
+        ? {
+            resort,
+            daily: bandData.daily,
+            band,
+            elevation: bandData.elevation,
+            weekTotalSnow,
+            snowUnit: snow,
+            tempUnit: temp,
+            elevUnit: elev,
+          }
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [bandData, resort, band, weekTotalSnow, snow, temp, elev],
+  );
+
+  // Register share data with the global fab
+  useEffect(() => {
+    setShareData(shareCardData, selectedDayIdx);
+  }, [shareCardData, selectedDayIdx, setShareData]);
+
+  // Clear share data when leaving this page
+  useEffect(() => {
+    return () => setShareData(null);
+  }, [setShareData]);
 
   return (
     <div className="resort-page">
@@ -192,12 +208,9 @@ export function ResortPage() {
           </p>
         </div>
         <div className="resort-page__header-right">
-          <div className="resort-page__header-actions">
-            <ShareButton cardData={shareCardData} selectedDayIdx={selectedDayIdx} />
-            <button className="resort-page__refresh" onClick={handleRefresh} disabled={loading}>
-              {loading ? 'Loading…' : <><RefreshCw size={14} /> Refresh</>}
-            </button>
-          </div>
+          <button className="resort-page__refresh" onClick={handleRefresh} disabled={loading}>
+            {loading ? 'Loading…' : <><RefreshCw size={14} /> Refresh</>}
+          </button>
           {lastRefreshed && (
             <span className="resort-page__last-refreshed">
               {fmtDate(lastRefreshed.toISOString(), { hour: 'numeric', minute: '2-digit' })}
