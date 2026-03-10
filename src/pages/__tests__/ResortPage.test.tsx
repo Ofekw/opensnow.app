@@ -140,6 +140,20 @@ describe('ResortPage', () => {
     expect(link).toHaveAttribute('href', 'https://www.vail.com');
   });
 
+  it('renders mountain cams link when available', () => {
+    renderResortPage();
+    const link = screen.getByText('Mountain Cams ↗');
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.vail.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+    );
+  });
+
+  it('omits mountain cams link when unavailable', () => {
+    renderResortPage('lee-canyon-nv');
+    expect(screen.queryByText('Mountain Cams ↗')).not.toBeInTheDocument();
+  });
+
   it('renders elevation stats', () => {
     renderResortPage();
     // Stats section labels (duplicated by ElevationToggle, so use getAllByText)

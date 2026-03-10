@@ -19,6 +19,7 @@ export const RESORTS: Resort[] = [
     lifts: 31,
     acres: 5317,
     website: 'https://www.vail.com',
+    camsUrl: 'https://www.vail.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
   {
     slug: 'breckenridge-co',
@@ -32,6 +33,7 @@ export const RESORTS: Resort[] = [
     lifts: 35,
     acres: 2908,
     website: 'https://www.breckenridge.com',
+    camsUrl: 'https://www.breckenridge.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
   {
     slug: 'aspen-snowmass-co',
@@ -45,6 +47,7 @@ export const RESORTS: Resort[] = [
     lifts: 20,
     acres: 3332,
     website: 'https://www.aspensnowmass.com',
+    camsUrl: 'https://www.aspensnowmass.com/four-mountains/mountain-cams',
   },
   {
     slug: 'steamboat-co',
@@ -58,6 +61,7 @@ export const RESORTS: Resort[] = [
     lifts: 18,
     acres: 2965,
     website: 'https://www.steamboat.com',
+    camsUrl: 'https://www.steamboat.com/the-mountain/live-cams',
   },
   {
     slug: 'telluride-co',
@@ -125,6 +129,7 @@ export const RESORTS: Resort[] = [
     lifts: 41,
     acres: 7300,
     website: 'https://www.parkcitymountain.com',
+    camsUrl: 'https://www.parkcitymountain.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
   {
     slug: 'snowbird-ut',
@@ -138,6 +143,7 @@ export const RESORTS: Resort[] = [
     lifts: 11,
     acres: 2500,
     website: 'https://www.snowbird.com',
+    camsUrl: 'https://www.snowbird.com/mountain-cams/',
   },
   {
     slug: 'alta-ut',
@@ -151,6 +157,7 @@ export const RESORTS: Resort[] = [
     lifts: 10,
     acres: 2614,
     website: 'https://www.alta.com',
+    camsUrl: 'https://www.alta.com/condition/webcams',
   },
   {
     slug: 'brighton-ut',
@@ -205,6 +212,7 @@ export const RESORTS: Resort[] = [
     lifts: 25,
     acres: 3500,
     website: 'https://www.mammothmountain.com',
+    camsUrl: 'https://www.mammothmountain.com/mountain/mountain-information/webcams',
   },
   {
     slug: 'heavenly-ca',
@@ -218,6 +226,7 @@ export const RESORTS: Resort[] = [
     lifts: 28,
     acres: 4800,
     website: 'https://www.skiheavenly.com',
+    camsUrl: 'https://www.skiheavenly.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
 
   // ── Wyoming ─────────────────────────────────────
@@ -233,6 +242,7 @@ export const RESORTS: Resort[] = [
     lifts: 13,
     acres: 2500,
     website: 'https://www.jacksonhole.com',
+    camsUrl: 'https://www.jacksonhole.com/webcams.html',
   },
 
   // ── Montana ─────────────────────────────────────
@@ -248,6 +258,7 @@ export const RESORTS: Resort[] = [
     lifts: 36,
     acres: 5800,
     website: 'https://bigskyresort.com',
+    camsUrl: 'https://bigskyresort.com/webcams',
   },
 
   // ── Vermont ─────────────────────────────────────
@@ -263,6 +274,7 @@ export const RESORTS: Resort[] = [
     lifts: 22,
     acres: 1509,
     website: 'https://www.killington.com',
+    camsUrl: 'https://www.killington.com/the-mountain/conditions/cams',
   },
   {
     slug: 'stowe-vt',
@@ -276,6 +288,7 @@ export const RESORTS: Resort[] = [
     lifts: 13,
     acres: 485,
     website: 'https://www.stowe.com',
+    camsUrl: 'https://www.stowe.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
 
   // ── New Hampshire ───────────────────────────────
@@ -336,6 +349,7 @@ export const RESORTS: Resort[] = [
     lifts: 37,
     acres: 8171,
     website: 'https://www.whistlerblackcomb.com',
+    camsUrl: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx',
   },
   {
     slug: 'revelstoke-bc',
@@ -364,6 +378,7 @@ export const RESORTS: Resort[] = [
     lifts: 10,
     acres: 4200,
     website: 'https://www.skilouise.com',
+    camsUrl: 'https://www.skilouise.com/the-mountain/webcams/',
   },
   {
     slug: 'sunshine-village-ab',
@@ -377,6 +392,7 @@ export const RESORTS: Resort[] = [
     lifts: 12,
     acres: 3358,
     website: 'https://www.skibanff.com',
+    camsUrl: 'https://www.skibanff.com/conditions/webcams',
   },
 
   // ── Canada – Québec ─────────────────────────────
@@ -827,6 +843,7 @@ export const RESORTS: Resort[] = [
     lifts: 13,
     acres: 4270,
     website: 'https://www.sunpeaksresort.com',
+    camsUrl: 'https://www.sunpeaksresort.com/explore/webcams',
   },
   {
     slug: 'big-white-bc',
@@ -907,6 +924,7 @@ export const RESORTS: Resort[] = [
     lifts: 6,
     acres: 190,
     website: 'https://banffnorquay.com',
+    camsUrl: 'https://banffnorquay.com/conditions/web-cams/',
   },
   {
     slug: 'nakiska-ab',
@@ -1741,6 +1759,7 @@ export const RESORTS: Resort[] = [
     lifts: 20,
     acres: 3332,
     website: 'https://www.aspensnowmass.com',
+    camsUrl: 'https://www.aspensnowmass.com/four-mountains/snowmass/mountain-cams',
   },
   {
     slug: 'snow-valley-ca',
