@@ -13,12 +13,14 @@ interface Props {
   selectedDayIdx?: number;
   /** Optional CSS class to use instead of the default resort-page__share class */
   className?: string;
+  /** Render the control as an icon-only button, for FAB usage */
+  iconOnly?: boolean;
 }
 
 type ShareState = "idle" | "generating" | "copied" | "shared" | "error";
 
-export function ShareButton({ cardData, selectedDayIdx, className }: Props) {
-  const [state, setState] = useState<ShareState>("idle");
+export function ShareButton({ cardData, selectedDayIdx, className, iconOnly = false }: Props) {
+  const [state, setState] = useState<ShareState>('idle');
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -57,7 +59,8 @@ export function ShareButton({ cardData, selectedDayIdx, className }: Props) {
     if (selectedDayIdx != null && selectedDayIdx > 0)
       params.set("day", String(selectedDayIdx));
     const qs = params.toString();
-    const shareUrl = `${window.location.origin}/resort/${cardData.resort.slug}${qs ? `?${qs}` : ""}`;
+    const shareUrl = `${window.location.origin}/resort/${cardData.resort.slug}${qs ? `?${qs}` : ''}`;
+    const displayUrl = `pow.fyi/resort/${cardData.resort.slug}${qs ? `?${qs}` : ''}`;
 
     try {
       const canvas = renderShareCard(cardData);
@@ -101,33 +104,34 @@ export function ShareButton({ cardData, selectedDayIdx, className }: Props) {
       }
 
       // Fallback: copy image + URL to clipboard
-      if (typeof navigator !== "undefined" && navigator.clipboard?.write) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.write) {
         try {
-          // Try to write both image and URL text in one ClipboardItem
+          // When supported, copy both the rendered image and the deep-link URL so
+          // users can paste the rich card or the link, depending on the target app.
           await navigator.clipboard.write([
             new ClipboardItem({
-              "image/png": blob,
-              "text/plain": new Blob([shareUrl], { type: "text/plain" }),
+              'image/png': blob,
+              'text/plain': new Blob([shareUrl], { type: 'text/plain' }),
             }),
           ]);
-          setState("copied");
-          showToast(`Screenshot + link copied! ${shareUrl}`);
+          setState('copied');
+          showToast('Screenshot and link copied!');
         } catch {
-          // Multi-type write not supported — copy image only, show URL in toast
           try {
             await navigator.clipboard.write([
-              new ClipboardItem({ "image/png": blob }),
+              new ClipboardItem({ 'image/png': blob }),
             ]);
-            setState("copied");
-            showToast(`Screenshot copied! Link: ${shareUrl}`);
+            setState('copied');
+            showToast(`Screenshot copied! Link: ${displayUrl}`);
           } catch {
-            // Image write failed — fall back to URL text
+            // Final fallback: copy URL to clipboard if available
             if (navigator.clipboard?.writeText) {
               await navigator.clipboard.writeText(shareUrl);
-              setState("copied");
-              showToast("Link copied to clipboard!");
+              setState('copied');
+              showToast('Link copied to clipboard!');
             } else {
-              setState("copied");
+              // No clipboard access; show URL so user can copy manually
+              setState('copied');
               showToast(`Share link: ${shareUrl}`);
             }
           }
@@ -192,16 +196,17 @@ export function ShareButton({ cardData, selectedDayIdx, className }: Props) {
     <>
       <button
         className={
-          className
-            ? `${className} ${state !== "idle" && state !== "generating" ? "share-btn--" + state : ""}`
-            : `resort-page__share ${state !== "idle" && state !== "generating" ? "resort-page__share--" + state : ""}`
+          iconOnly
+            ? `${className} ${state !== 'idle' && state !== 'generating' ? 'share-btn--' + state : ''}`
+            : `resort-page__share ${state !== 'idle' && state !== 'generating' ? 'resort-page__share--' + state : ''}`
         }
         onClick={handleShare}
-        disabled={!cardData || state === "generating"}
-        aria-label={className ? label : "Share forecast"}
+        disabled={!cardData || state === 'generating'}
+        aria-label="Share forecast"
+        aria-busy={state === 'generating'}
         title="Share forecast screenshot"
       >
-        {className ? icon : <>{icon} {label}</>}
+        {iconOnly ? icon : <>{icon} {label}</>}
       </button>
       {toast && (
         <div

@@ -130,7 +130,12 @@ export function Layout() {
         </div>
 
         {cardData && (
-          <ShareButton cardData={cardData} selectedDayIdx={selectedDayIdx} className="fab fab--icon" />
+          <ShareButton
+            cardData={cardData}
+            selectedDayIdx={selectedDayIdx}
+            className="fab fab--icon"
+            iconOnly
+          />
         )}
 
         <div className="info-popover" ref={infoRef}>
