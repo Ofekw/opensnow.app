@@ -5,6 +5,9 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { ResortCard } from '@/components/ResortCard';
 import { FavoriteCard } from '@/components/FavoriteCard';
 import { SearchDropdown } from '@/components/SearchDropdown';
+import babkaImage from '@/resources/images/babka.png';
+import mfjhImage from '@/resources/images/mfjh.jpg';
+import ofekImage from '@/resources/images/ofek.jpeg';
 import './HomePage.css';
 
 const BABKA_SIZE = 200;
@@ -146,7 +149,7 @@ function BabkaOverlay({ onDismiss }: BabkaOverlayProps) {
       </svg>
       <img
         ref={imgRef}
-        src="https://github.com/user-attachments/assets/ff10b448-8e80-42f7-87a3-4354516bcf73"
+        src={babkaImage}
         alt="Babka easter egg"
         className="home__babka-image"
         style={{ left: '0px', top: '0px' }}
@@ -291,7 +294,7 @@ export function HomePage() {
           onKeyDown={(e) => e.key === 'Enter' && setQuery('')}
         >
           <img
-            src="https://github.com/user-attachments/assets/1e0bab4c-6ead-4f02-9256-7e21fef78eb9"
+            src={ofekImage}
             alt="Easter egg"
             className="home__easter-egg-image"
           />
@@ -311,7 +314,7 @@ export function HomePage() {
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setQuery('')}
         >
           <img
-            src="https://github.com/user-attachments/assets/03aabe30-6386-4394-aaa2-f3f618bbeb5d"
+            src={mfjhImage}
             alt="MFJH easter egg"
             className="home__easter-egg-image--mfjh"
             style={{ height: `${mfjhSize}vh`, maxWidth: '100vw' }}
