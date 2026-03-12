@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   Snowflake, BarChart3, Clock, Sun, Thermometer,
-  TrendingUp, AlertTriangle, RefreshCw, Star, Layers,
+  TrendingUp, AlertTriangle, RefreshCw, Star, Layers, Info,
 } from 'lucide-react';
 import { WeatherIcon } from '@/components/icons';
 import { getResortBySlug } from '@/data/resorts';
@@ -25,7 +25,17 @@ import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import type { ElevationBand, BandForecast, DailyMetrics } from '@/types';
 import type { ShareCardData } from '@/utils/shareCard';
+import type { SnowAttributionMode } from '@/components/snowTimelinePeriods';
 import './ResortPage.css';
+
+const SNOW_ATTRIBUTION_TOOLTIP = `Calendar day
+• Morning: 12 am–8 am
+• Day: 8 am–6 pm
+• Night: 6 pm–12 am
+
+Ski day
+• Overnight: 6 pm previous day–8 am today
+• Daytime: 8 am–6 pm today`;
 
 export function ResortPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -49,6 +59,7 @@ export function ResortPage() {
 
   const [band, setBand] = useState<ElevationBand>(initialBand);
   const [selectedDayIdx, setSelectedDayIdx] = useState(initialDay);
+  const [snowAttributionMode, setSnowAttributionMode] = useState<SnowAttributionMode>('calendar');
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const prevFetchedAtRef = useRef<string | undefined>(undefined);
 
@@ -268,6 +279,42 @@ export function ResortPage() {
         )}
       </section>
 
+      <div className="resort-page__toggle-row">
+        <div className="resort-page__attribution-control">
+          <div className="resort-page__attribution-header">
+            <span className="resort-page__attribution-label">Daily snow attribution</span>
+            <button
+              type="button"
+              className="resort-page__attribution-info"
+              aria-label="Snow attribution time ranges"
+              title={SNOW_ATTRIBUTION_TOOLTIP}
+            >
+              <Info size={14} />
+            </button>
+          </div>
+          <div className="resort-page__attribution-toggle" role="radiogroup" aria-label="Daily snow attribution">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={snowAttributionMode === 'calendar'}
+              className={`resort-page__attribution-btn ${snowAttributionMode === 'calendar' ? 'active' : ''}`}
+              onClick={() => setSnowAttributionMode('calendar')}
+            >
+              Calendar day
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={snowAttributionMode === 'ski'}
+              className={`resort-page__attribution-btn ${snowAttributionMode === 'ski' ? 'active' : ''}`}
+              onClick={() => setSnowAttributionMode('ski')}
+            >
+              Ski day
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* ─── SNOW TIMELINE (hero position) ─── */}
       {bandData && recentDays.length > 0 && (
         <section className="resort-page__section animate-fade-in-up" style={{ animationDelay: '200ms' }}>
@@ -276,6 +323,7 @@ export function ResortPage() {
             recentDays={recentDays}
             forecastDays={bandData.daily}
             forecastHourly={bandData.hourly}
+            attributionMode={snowAttributionMode}
           />
         </section>
       )}
@@ -367,7 +415,11 @@ export function ResortPage() {
             {/* 7-day overview chart */}
             <div className="resort-page__chart-block">
               <h3 className="section-subtitle">7-Day Overview</h3>
-              <DailyForecastChart daily={bandData.daily} hourly={bandData.hourly} />
+              <DailyForecastChart
+                daily={bandData.daily}
+                hourly={bandData.hourly}
+                attributionMode={snowAttributionMode}
+              />
             </div>
 
             {/* Hourly snow breakdown for selected day */}

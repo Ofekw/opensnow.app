@@ -11,7 +11,11 @@ import type { DailyMetrics, HourlyMetrics } from '@/types';
 import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import { fmtSnow, cmToIn } from '@/utils/weather';
-import { splitDayPeriods } from './snowTimelinePeriods';
+import {
+  getSnowAttributionPeriods,
+  splitSnowAttributionPeriods,
+  type SnowAttributionMode,
+} from './snowTimelinePeriods';
 import './SnowTimeline.css';
 
 interface Props {
@@ -21,12 +25,19 @@ interface Props {
   forecastDays: DailyMetrics[];
   /** Hourly forecast data — used to split future days into AM/PM/Overnight */
   forecastHourly?: HourlyMetrics[];
+  attributionMode?: SnowAttributionMode;
 }
 
-export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props) {
+export function SnowTimeline({
+  recentDays,
+  forecastDays,
+  forecastHourly,
+  attributionMode = 'calendar',
+}: Props) {
   const { snow } = useUnits();
   const { fmtDate } = useTimezone();
   const isImperial = snow === 'in';
+  const periodDefs = getSnowAttributionPeriods(attributionMode);
 
   const { pastBars, todayBar, futureBars, maxSnow, pastTotal, futureTotal } = useMemo(() => {
     // Take last 7 past days
@@ -44,36 +55,41 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
       raw: d.snowfallSum,
     }));
 
-    const todayPeriods = todayDay && forecastHourly ? splitDayPeriods(todayDay.date, forecastHourly) : null;
+    const toDisplayPeriods = (date: string) =>
+      forecastHourly
+        ? splitSnowAttributionPeriods(date, forecastHourly, attributionMode).map((period) => ({
+            ...period,
+            snow: toDisplay(period.snowfall),
+          }))
+        : [];
+
+    const todayPeriods = todayDay ? toDisplayPeriods(todayDay.date) : [];
     const todayBar = todayDay
       ? {
           date: todayDay.date,
           snow: toDisplay(todayDay.snowfallSum),
           raw: todayDay.snowfallSum,
-          am: todayPeriods ? toDisplay(todayPeriods.am) : 0,
-          pm: todayPeriods ? toDisplay(todayPeriods.pm) : 0,
-          overnight: todayPeriods ? toDisplay(todayPeriods.overnight) : 0,
+          periods: todayPeriods,
         }
       : null;
 
     const futureBars = future.map((d) => {
-      const periods = forecastHourly ? splitDayPeriods(d.date, forecastHourly) : null;
       return {
         date: d.date,
         snow: toDisplay(d.snowfallSum),
         raw: d.snowfallSum,
-        am: periods ? toDisplay(periods.am) : 0,
-        pm: periods ? toDisplay(periods.pm) : 0,
-        overnight: periods ? toDisplay(periods.overnight) : 0,
+        periods: toDisplayPeriods(d.date),
       };
     });
 
     // For the max calculation, consider individual period values so bars scale correctly
-    const todayPeriodSnow = todayBar && forecastHourly ? [todayBar.am, todayBar.pm, todayBar.overnight] : (todayBar ? [todayBar.snow] : []);
+    const todayPeriodSnow = todayBar && forecastHourly
+      ? todayBar.periods.map((period) => period.snow)
+      : (todayBar ? [todayBar.snow] : []);
     const allSnow = [
       ...pastBars.map((b) => b.snow),
       ...todayPeriodSnow,
-      ...futureBars.flatMap((b) => (forecastHourly ? [b.am, b.pm, b.overnight] : [b.snow])),
+      ...futureBars.flatMap((b) => (forecastHourly ? b.periods.map((period) => period.snow) : [b.snow])),
     ];
     const maxSnow = Math.max(...allSnow, 0.1); // avoid 0 max
 
@@ -82,7 +98,7 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
       (todayDay ? todayDay.snowfallSum : 0) + future.reduce((s, d) => s + d.snowfallSum, 0);
 
     return { pastBars, todayBar, futureBars, maxSnow, pastTotal, futureTotal };
-  }, [recentDays, forecastDays, forecastHourly, isImperial]);
+  }, [recentDays, forecastDays, forecastHourly, attributionMode, isImperial]);
 
   const fmtDay = (dateStr: string) =>
     fmtDate(dateStr + 'T12:00:00', { weekday: 'short' });
@@ -141,23 +157,16 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
             {todayBar ? todayBar.snow : ''}
           </span>
           {todayBar ? (
-            forecastHourly && (todayBar.am > 0 || todayBar.pm > 0 || todayBar.overnight > 0) ? (
+            forecastHourly && todayBar.periods.some((period) => period.snow > 0) ? (
               <div className="snow-timeline__bar-track snow-timeline__bar-track--periods snow-timeline__bar-track--today">
-                <div
-                  className="snow-timeline__bar snow-timeline__bar--am"
-                  style={{ height: `${Math.max((todayBar.am / maxSnow) * 100, todayBar.am > 0 ? 4 : 0)}%` }}
-                  title={`Morning snow: ${todayBar.am}${unit}`}
-                />
-                <div
-                  className="snow-timeline__bar snow-timeline__bar--pm"
-                  style={{ height: `${Math.max((todayBar.pm / maxSnow) * 100, todayBar.pm > 0 ? 4 : 0)}%` }}
-                  title={`Afternoon snow: ${todayBar.pm}${unit}`}
-                />
-                <div
-                  className="snow-timeline__bar snow-timeline__bar--overnight"
-                  style={{ height: `${Math.max((todayBar.overnight / maxSnow) * 100, todayBar.overnight > 0 ? 4 : 0)}%` }}
-                  title={`Overnight snow: ${todayBar.overnight}${unit}`}
-                />
+                {todayBar.periods.map((period) => (
+                  <div
+                    key={period.key}
+                    className={`snow-timeline__bar snow-timeline__bar--${period.colorClass}`}
+                    style={{ height: `${Math.max((period.snow / maxSnow) * 100, period.snow > 0 ? 4 : 0)}%` }}
+                    title={`${period.label} snow: ${period.snow}${unit}`}
+                  />
+                ))}
               </div>
             ) : (
               <div className="snow-timeline__bar-track">
@@ -180,7 +189,7 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
         {/* Future bars — split into AM / PM / Overnight sub-bars */}
         <div className="snow-timeline__section snow-timeline__section--future">
           {futureBars.map((bar) => {
-            const hasPeriods = forecastHourly && (bar.am > 0 || bar.pm > 0 || bar.overnight > 0);
+            const hasPeriods = forecastHourly && bar.periods.some((period) => period.snow > 0);
             return (
               <div
                 key={bar.date}
@@ -192,21 +201,14 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
                 </span>
                 {hasPeriods ? (
                   <div className="snow-timeline__bar-track snow-timeline__bar-track--periods">
-                    <div
-                      className="snow-timeline__bar snow-timeline__bar--am"
-                      style={{ height: `${Math.max((bar.am / maxSnow) * 100, bar.am > 0 ? 4 : 0)}%` }}
-                      title={`Morning snow: ${bar.am}${unit}`}
-                    />
-                    <div
-                      className="snow-timeline__bar snow-timeline__bar--pm"
-                      style={{ height: `${Math.max((bar.pm / maxSnow) * 100, bar.pm > 0 ? 4 : 0)}%` }}
-                      title={`Afternoon snow: ${bar.pm}${unit}`}
-                    />
-                    <div
-                      className="snow-timeline__bar snow-timeline__bar--overnight"
-                      style={{ height: `${Math.max((bar.overnight / maxSnow) * 100, bar.overnight > 0 ? 4 : 0)}%` }}
-                      title={`Overnight snow: ${bar.overnight}${unit}`}
-                    />
+                    {bar.periods.map((period) => (
+                      <div
+                        key={period.key}
+                        className={`snow-timeline__bar snow-timeline__bar--${period.colorClass}`}
+                        style={{ height: `${Math.max((period.snow / maxSnow) * 100, period.snow > 0 ? 4 : 0)}%` }}
+                        title={`${period.label} snow: ${period.snow}${unit}`}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <div className="snow-timeline__bar-track">
@@ -225,18 +227,12 @@ export function SnowTimeline({ recentDays, forecastDays, forecastHourly }: Props
 
       {/* Legend */}
       <div className="snow-timeline__legend" aria-label="Legend">
-        <span className="snow-timeline__legend-item" title="AM — 6 am to 12 pm">
-          <span className="snow-timeline__legend-swatch snow-timeline__legend-swatch--am" />
-          AM
-        </span>
-        <span className="snow-timeline__legend-item" title="PM — 12 pm to 6 pm">
-          <span className="snow-timeline__legend-swatch snow-timeline__legend-swatch--pm" />
-          PM
-        </span>
-        <span className="snow-timeline__legend-item" title="Night — 6 pm to 6 am">
-          <span className="snow-timeline__legend-swatch snow-timeline__legend-swatch--overnight" />
-          Night
-        </span>
+        {periodDefs.map((period) => (
+          <span key={period.key} className="snow-timeline__legend-item" title={period.tooltip}>
+            <span className={`snow-timeline__legend-swatch snow-timeline__legend-swatch--${period.colorClass}`} />
+            {period.shortLabel}
+          </span>
+        ))}
       </div>
     </div>
   );

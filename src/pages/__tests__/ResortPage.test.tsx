@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, mock } from 'bun:test';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { UnitsProvider } from '@/context/UnitsContext';
@@ -93,6 +94,30 @@ mock.module('@/hooks/useWeather', () => ({
   })),
 }));
 
+mock.module('@/components/charts/DailyForecastChart', () => ({
+  DailyForecastChart: () => <div data-testid="daily-forecast-chart" />,
+}));
+
+mock.module('@/components/charts/HourlyDetailChart', () => ({
+  HourlyDetailChart: () => <div data-testid="hourly-detail-chart" />,
+}));
+
+mock.module('@/components/charts/HourlySnowChart', () => ({
+  HourlySnowChart: () => <div data-testid="hourly-snow-chart" />,
+}));
+
+mock.module('@/components/charts/RecentSnowChart', () => ({
+  RecentSnowChart: () => <div data-testid="recent-snow-chart" />,
+}));
+
+mock.module('@/components/charts/FreezingLevelChart', () => ({
+  FreezingLevelChart: () => <div data-testid="freezing-level-chart" />,
+}));
+
+mock.module('@/components/charts/UVIndexChart', () => ({
+  UVIndexChart: () => <div data-testid="uv-index-chart" />,
+}));
+
 // Import after mocks are set up
 const { ResortPage } = await import('@/pages/ResortPage');
 
@@ -177,7 +202,24 @@ describe('ResortPage', () => {
 
   it('renders elevation toggle', () => {
     renderResortPage();
-    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Elevation band' })).toBeInTheDocument();
+  });
+
+  it('renders a calendar day / ski day attribution toggle that defaults to calendar day', () => {
+    renderResortPage();
+    const attributionToggle = screen.getByRole('radiogroup', { name: 'Daily snow attribution' });
+    expect(attributionToggle).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Calendar day' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Ski day' })).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('shows the attribution tooltip and allows switching to ski day', async () => {
+    const user = userEvent.setup();
+    renderResortPage();
+    expect(screen.getByTitle(/Calendar day/)).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Ski day' }));
+    expect(screen.getByRole('radio', { name: 'Calendar day' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('radio', { name: 'Ski day' })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('renders refresh button in header', () => {
