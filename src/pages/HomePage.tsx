@@ -167,6 +167,8 @@ export function HomePage() {
   const isBabkaEasterEgg = query.toLowerCase() === 'babka';
   const filtered = useMemo(() => searchResorts(query), [query]);
 
+  const ofekDialogRef = useRef<HTMLDivElement>(null);
+
   // Handle Escape key to dismiss easter egg
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -177,6 +179,13 @@ export function HomePage() {
     if (isEasterEgg) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isEasterEgg]);
+
+  // Move focus to ofek dialog on mount so keyboard users can interact with it
+  useEffect(() => {
+    if (isEasterEgg) {
+      ofekDialogRef.current?.focus();
     }
   }, [isEasterEgg]);
 
@@ -285,13 +294,20 @@ export function HomePage() {
       {/* Easter Egg: Show spinning image when user searches for "Ofek" */}
       {isEasterEgg && (
         <div
+          ref={ofekDialogRef}
           className="home__easter-egg"
           data-testid="easter-egg"
           role="dialog"
           aria-modal="true"
           aria-label="Easter egg overlay"
+          tabIndex={0}
           onClick={() => setQuery('')}
-          onKeyDown={(e) => e.key === 'Enter' && setQuery('')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setQuery('');
+            }
+          }}
         >
           <img
             src={ofekImage}
@@ -311,7 +327,12 @@ export function HomePage() {
           aria-label="MFJH easter egg overlay"
           tabIndex={0}
           onClick={() => setQuery('')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setQuery('')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setQuery('');
+            }
+          }}
         >
           <img
             src={mfjhImage}
