@@ -5,7 +5,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { ResortCard } from '@/components/ResortCard';
 import { FavoriteCard } from '@/components/FavoriteCard';
 import { SearchDropdown } from '@/components/SearchDropdown';
-import babkaImage from '@/resources/images/babka.webp';
+import babkaImage from '@/resources/images/babka.png';
 import mfjhImage from '@/resources/images/mfjh.webp';
 import ofekImage from '@/resources/images/ofek.webp';
 import './HomePage.css';
