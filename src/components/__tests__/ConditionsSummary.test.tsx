@@ -118,7 +118,7 @@ describe('ConditionsSummary', () => {
 
   it('renders snow values for all bands', () => {
     renderSummary();
-    // Calendar attribution sums 2am + 10am + 8pm hourly snowfall = 9cm → 3.5"
+    // Calendar attribution sums the 02:00, 10:00, and 20:00 hourly snowfall values = 9cm → 3.5"
     const snowCells = screen.getAllByText('3.5"');
     expect(snowCells.length).toBe(3);
   });

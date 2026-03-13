@@ -227,7 +227,7 @@ export function ResortPage() {
   }, [forecast]);
 
   // Compute 7-day total snowfall
-  const weekTotalSnow = displayedDailySnowfall.reduce((sum, dailySnowfall) => sum + dailySnowfall, 0);
+  const weekTotalSnow = (displayedDailySnowfall ?? []).reduce((sum, dailySnowfall) => sum + dailySnowfall, 0);
   const selectedDaySnowfall = displayedDailySnowfall[selectedDayIdx] ?? selectedDay?.snowfallSum ?? 0;
 
   const shareCardData: ShareCardData | null = useMemo(

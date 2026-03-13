@@ -323,21 +323,21 @@ describe('ResortPage', () => {
     const user = userEvent.setup();
     renderResortPage();
 
-    const selectedCardSnow = document.querySelector('.day-card--selected .day-card__snow');
-    expect(selectedCardSnow?.textContent).toContain('5.1"');
+    const selectedDayCard = screen.getByRole('button', { pressed: true });
+    expect(within(selectedDayCard).getByText('5.1"')).toBeInTheDocument();
     expect(screen.getByText('7.1" next 7 days')).toBeInTheDocument();
     expect(screen.getByTestId('hourly-snow-chart')).toHaveTextContent('Hourly snow total: 13');
     expect(screen.getByText('3.1"')).toBeInTheDocument();
-    expect(screen.getAllByText('5.1"').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('5.1"')).toHaveLength(2);
     expect(screen.getByText('7.1"')).toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: 'Ski day' }));
 
-    expect(selectedCardSnow?.textContent).toContain('5.9"');
+    expect(within(screen.getByRole('button', { pressed: true })).getByText('5.9"')).toBeInTheDocument();
     expect(screen.getByText('8.3" next 7 days')).toBeInTheDocument();
     expect(screen.getByTestId('hourly-snow-chart')).toHaveTextContent('Hourly snow total: 15');
     expect(screen.getByText('3.5"')).toBeInTheDocument();
-    expect(screen.getAllByText('5.9"').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('5.9"')).toHaveLength(2);
     expect(screen.getByText('7.9"')).toBeInTheDocument();
   });
 
