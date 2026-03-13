@@ -25,7 +25,11 @@ import { useUnits } from '@/context/UnitsContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import type { ElevationBand, BandForecast, DailyMetrics } from '@/types';
 import type { ShareCardData } from '@/utils/shareCard';
-import type { SnowAttributionMode } from '@/components/snowTimelinePeriods';
+import {
+  getAttributedSnowfallTotal,
+  getSnowAttributionWindowHours,
+  type SnowAttributionMode,
+} from '@/components/snowTimelinePeriods';
 import './ResortPage.css';
 
 const SNOW_ATTRIBUTION_TOOLTIP = `Calendar day
@@ -188,6 +192,14 @@ export function ResortPage() {
   }, [forecast?.fetchedAt]);
 
   const bandData: BandForecast | undefined = forecast?.[band];
+  const displayedDailySnowfall = useMemo(
+    () =>
+      bandData
+        ? bandData.daily.map((d) =>
+            getAttributedSnowfallTotal(d.date, d.snowfallSum, bandData.hourly, snowAttributionMode))
+        : [],
+    [bandData, snowAttributionMode],
+  );
 
   // Compute hourly data for selected day
   const selectedDay = bandData?.daily[selectedDayIdx];
@@ -195,6 +207,10 @@ export function ResortPage() {
     if (!bandData || !selectedDay) return [];
     return bandData.hourly.filter((h) => h.time.startsWith(selectedDay.date));
   }, [bandData, selectedDay]);
+  const selectedDaySnowHourly = useMemo(() => {
+    if (!bandData || !selectedDay) return [];
+    return getSnowAttributionWindowHours(selectedDay.date, bandData.hourly, snowAttributionMode);
+  }, [bandData, selectedDay, snowAttributionMode]);
 
   // Compute snowpack depth — max snow_depth across ALL bands for today.
   // snow_depth is a grid-cell value so we take the max across bands to match
@@ -216,9 +232,8 @@ export function ResortPage() {
   }, [forecast]);
 
   // Compute 7-day total snowfall
-  const weekTotalSnow = bandData
-    ? bandData.daily.reduce((s, d) => s + d.snowfallSum, 0)
-    : 0;
+  const weekTotalSnow = (displayedDailySnowfall ?? []).reduce((sum, dailySnowfall) => sum + dailySnowfall, 0);
+  const selectedDaySnowfall = displayedDailySnowfall[selectedDayIdx] ?? selectedDay?.snowfallSum ?? 0;
 
   const shareCardData: ShareCardData | null = useMemo(
     () =>
@@ -226,6 +241,7 @@ export function ResortPage() {
         ? {
             resort,
             daily: bandData.daily,
+            displayedDailySnowfall,
             band,
             elevation: bandData.elevation,
             weekTotalSnow,
@@ -234,7 +250,7 @@ export function ResortPage() {
             elevUnit: elev,
           }
         : null,
-    [bandData, resort, band, weekTotalSnow, snow, temp, elev],
+    [bandData, resort, displayedDailySnowfall, band, weekTotalSnow, snow, temp, elev],
   );
 
   useEffect(() => {
@@ -440,6 +456,7 @@ export function ResortPage() {
           {bandData.daily.map((d, i) => {
             const desc = weatherDescription(d.weatherCode);
             const isSelected = i === selectedDayIdx;
+            const displayedSnow = displayedDailySnowfall[i] ?? d.snowfallSum;
             return (
               <button
                 key={d.date}
@@ -457,7 +474,7 @@ export function ResortPage() {
                   {fmtTemp(d.temperatureMax, temp)} / {fmtTemp(d.temperatureMin, temp)}
                 </span>
                 <span className="day-card__snow">
-                  {d.snowfallSum > 0 ? <><Snowflake size={12} /> {fmtSnow(d.snowfallSum, snow)}</> : '—'}
+                  {displayedSnow > 0 ? <><Snowflake size={12} /> {fmtSnow(displayedSnow, snow)}</> : '—'}
                 </span>
               </button>
             );
@@ -494,6 +511,7 @@ export function ResortPage() {
               }}
               selectedDayIdx={selectedDayIdx}
               elevations={resort.elevation}
+              attributionMode={snowAttributionMode}
             />
           </section>
 
@@ -521,11 +539,11 @@ export function ResortPage() {
             </div>
 
             {/* Hourly snow breakdown for selected day */}
-            {selectedDayHourly.length > 0 && selectedDay && (
+            {selectedDaySnowHourly.length > 0 && selectedDay && (
               <HourlySnowChart
-                hourly={selectedDayHourly}
+                hourly={selectedDaySnowHourly}
                 dayLabel={selectedDayLabel}
-                snowfallSum={selectedDay.snowfallSum}
+                snowfallSum={selectedDaySnowfall}
               />
             )}
           </section>
