@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll, mock } from 'bun:test';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
 import { MemoryRouter } from 'react-router-dom';
@@ -219,6 +219,27 @@ describe('ResortPage', () => {
     await user.click(screen.getByRole('radio', { name: 'Ski day' }));
     expect(screen.getByRole('radio', { name: 'Calendar day' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Ski day' })).toBeChecked();
+  });
+
+  it('opens and closes the attribution info popover from the info icon', async () => {
+    const user = userEvent.setup();
+    renderResortPage();
+
+    const infoButton = screen.getByRole('button', { name: 'Snow attribution time ranges' });
+    expect(infoButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('dialog', { name: 'Snow attribution time ranges' })).not.toBeInTheDocument();
+
+    await user.click(infoButton);
+    expect(infoButton).toHaveAttribute('aria-expanded', 'true');
+    const dialog = screen.getByRole('dialog', { name: 'Snow attribution time ranges' });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText('Calendar day')).toBeInTheDocument();
+    expect(within(dialog).getByText('Morning: 12 am–8 am')).toBeInTheDocument();
+    expect(within(dialog).getByText('Overnight: 6 pm previous day–8 am today')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(infoButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('dialog', { name: 'Snow attribution time ranges' })).not.toBeInTheDocument();
   });
 
   it('renders refresh button in header', () => {

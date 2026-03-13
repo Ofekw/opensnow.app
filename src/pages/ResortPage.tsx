@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, useId } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   Snowflake, BarChart3, Clock, Sun, Thermometer,
@@ -42,6 +42,24 @@ const SNOW_ATTRIBUTION_OPTIONS: Array<{ value: SnowAttributionMode; label: strin
   { value: 'ski', label: 'Ski day' },
 ];
 
+const SNOW_ATTRIBUTION_POPOVER_CONTENT = [
+  {
+    heading: 'Calendar day',
+    items: [
+      'Morning: 12 am–8 am',
+      'Day: 8 am–6 pm',
+      'Night: 6 pm–12 am',
+    ],
+  },
+  {
+    heading: 'Ski day',
+    items: [
+      'Overnight: 6 pm previous day–8 am today',
+      'Daytime: 8 am–6 pm today',
+    ],
+  },
+] as const;
+
 export function ResortPage() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
@@ -65,8 +83,11 @@ export function ResortPage() {
   const [band, setBand] = useState<ElevationBand>(initialBand);
   const [selectedDayIdx, setSelectedDayIdx] = useState(initialDay);
   const [snowAttributionMode, setSnowAttributionMode] = useState<SnowAttributionMode>('calendar');
+  const [isAttributionInfoOpen, setIsAttributionInfoOpen] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const prevFetchedAtRef = useRef<string | undefined>(undefined);
+  const attributionInfoRef = useRef<HTMLDivElement>(null);
+  const attributionPopoverId = useId();
 
   // Track when forecast data arrives (keyed on fetchedAt to avoid re-runs)
   useEffect(() => {
@@ -80,6 +101,33 @@ export function ResortPage() {
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  useEffect(() => {
+    if (!isAttributionInfoOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        attributionInfoRef.current
+        && !attributionInfoRef.current.contains(event.target as Node)
+      ) {
+        setIsAttributionInfoOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsAttributionInfoOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAttributionInfoOpen]);
 
   // Recent 14-day snowfall via forecast endpoint's past_days (no archive lag)
   const [recentDays, setRecentDays] = useState<DailyMetrics[]>([]);
@@ -288,14 +336,38 @@ export function ResortPage() {
         <div className="resort-page__attribution-control">
           <div className="resort-page__attribution-header">
             <span className="resort-page__attribution-label">Daily snow attribution</span>
-            <button
-              type="button"
-              className="resort-page__attribution-info"
-              aria-label="Snow attribution time ranges"
-              title={SNOW_ATTRIBUTION_TOOLTIP}
-            >
-              <Info size={14} />
-            </button>
+            <div className="resort-page__attribution-info-wrap" ref={attributionInfoRef}>
+              <button
+                type="button"
+                className="resort-page__attribution-info"
+                aria-label="Snow attribution time ranges"
+                aria-expanded={isAttributionInfoOpen}
+                aria-controls={attributionPopoverId}
+                title={SNOW_ATTRIBUTION_TOOLTIP}
+                onClick={() => setIsAttributionInfoOpen((open) => !open)}
+              >
+                <Info size={14} />
+              </button>
+              {isAttributionInfoOpen && (
+                <div
+                  id={attributionPopoverId}
+                  className="resort-page__attribution-popover"
+                  role="dialog"
+                  aria-label="Snow attribution time ranges"
+                >
+                  {SNOW_ATTRIBUTION_POPOVER_CONTENT.map((section) => (
+                    <section key={section.heading} className="resort-page__attribution-popover-section">
+                      <h3>{section.heading}</h3>
+                      <ul>
+                        {section.items.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <fieldset className="resort-page__attribution-toggle">
             <legend className="resort-page__sr-only">Daily snow attribution</legend>
