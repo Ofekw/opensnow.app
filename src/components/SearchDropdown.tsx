@@ -21,7 +21,6 @@ export function SearchDropdown({ query, onQueryChange, isFav, onToggleFavorite }
   const [geoLoading, setGeoLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const geoRequestedRef = useRef(false);
   const navigate = useNavigate();
 
   const trimmed = query.trim();
@@ -60,24 +59,25 @@ export function SearchDropdown({ query, onQueryChange, isFav, onToggleFavorite }
     [navigate, onQueryChange],
   );
 
-  function handleFocus() {
+  function handleLocationClick() {
+    if (geoLoading) return;
     setOpen(true);
-    if (!geoRequestedRef.current && navigator.geolocation) {
-      geoRequestedRef.current = true;
-      setGeoLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setNearbyResorts(
-            getNearbyResorts(pos.coords.latitude, pos.coords.longitude, MAX_RESULTS),
-          );
-          setGeoLoading(false);
-        },
-        () => {
-          setGeoLoading(false);
-        },
-        { timeout: 5000 },
-      );
-    }
+    inputRef.current?.focus();
+    if (nearbyResorts !== null) return; // already have results
+    if (!navigator.geolocation) return;
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setNearbyResorts(
+          getNearbyResorts(pos.coords.latitude, pos.coords.longitude, MAX_RESULTS),
+        );
+        setGeoLoading(false);
+      },
+      () => {
+        setGeoLoading(false);
+      },
+      { timeout: 5000 },
+    );
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -150,7 +150,7 @@ export function SearchDropdown({ query, onQueryChange, isFav, onToggleFavorite }
           onQueryChange(e.target.value);
           setOpen(true);
         }}
-        onFocus={handleFocus}
+        onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
         aria-label="Search resorts"
         aria-expanded={showPanel}
@@ -159,6 +159,20 @@ export function SearchDropdown({ query, onQueryChange, isFav, onToggleFavorite }
         role="combobox"
         autoComplete="off"
       />
+
+      <button
+        className={`search-dropdown__location-btn ${nearbyResorts !== null ? 'active' : ''}`}
+        onClick={handleLocationClick}
+        aria-label="Show nearby resorts"
+        title="Show nearby resorts"
+        tabIndex={0}
+      >
+        {geoLoading ? (
+          <Loader size={16} className="search-dropdown__loading-icon" />
+        ) : (
+          <MapPin size={16} fill={nearbyResorts !== null ? 'currentColor' : 'none'} />
+        )}
+      </button>
 
       {showPanel && (
         <div className="search-dropdown__panel" id="search-dropdown-panel" role="listbox">
